@@ -119,6 +119,15 @@ app.get("/test-db", (req, res) => {
   }
 });
 
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);

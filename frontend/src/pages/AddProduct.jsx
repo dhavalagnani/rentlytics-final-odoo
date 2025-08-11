@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import Layout from '../components/Layout';
 import { authAPI } from '../services/apiService';
 
@@ -24,19 +25,50 @@ function AddProduct() {
 
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
 
-  // Mock categories for now - replace with API call
+  // Fetch categories from API
   useEffect(() => {
-    setCategories([
-      { _id: '1', name: 'Electronics' },
-      { _id: '2', name: 'Tools & Equipment' },
-      { _id: '3', name: 'Vehicles' },
-      { _id: '4', name: 'Furniture' },
-      { _id: '5', name: 'Sports Equipment' }
-    ]);
+    const fetchCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const response = await fetch('/api/categories', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          setCategories(data.data.categories);
+        } else {
+          console.error('Failed to fetch categories:', data.message);
+          // Fallback to mock categories
+          setCategories([
+            { _id: '1', name: 'Electronics' },
+            { _id: '2', name: 'Tools & Equipment' },
+            { _id: '3', name: 'Vehicles' },
+            { _id: '4', name: 'Furniture' },
+            { _id: '5', name: 'Sports Equipment' }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        // Fallback to mock categories
+        setCategories([
+          { _id: '1', name: 'Electronics' },
+          { _id: '2', name: 'Tools & Equipment' },
+          { _id: '3', name: 'Vehicles' },
+          { _id: '4', name: 'Furniture' },
+                     { _id: '5', name: 'Sports Equipment' }
+        ]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
   }, []);
 
   const handleInputChange = (e) => {
@@ -64,7 +96,14 @@ function AddProduct() {
     );
 
     if (validFiles.length !== files.length) {
-      alert('Some files were skipped. Only image files under 5MB are allowed.');
+      toast.warning('⚠️ Some files were skipped. Only image files under 5MB are allowed.', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
 
     setSelectedFiles(prev => [...prev, ...validFiles]);
@@ -124,30 +163,92 @@ function AddProduct() {
     try {
       // Validate required fields
       if (!formData.name || !formData.description || !formData.categoryId) {
-        throw new Error('Please fill in all required fields');
+        const errorMsg = 'Please fill in all required fields';
+        toast.error(`❌ ${errorMsg}`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        throw new Error(errorMsg);
       }
 
-      // For now, just show success message
-      // TODO: Replace with actual API call
-      setMessage({ type: 'success', text: 'Product added successfully!' });
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
       
-      // Reset form
-      setFormData({
-        name: '',
-        description: '',
-        categoryId: '',
-        unitsAvailable: 1,
-        depositAmount: '',
-        baseRates: { hourly: '', daily: '', weekly: '' },
-        rules: { minRentalHours: '', maxRentalDays: '' },
-        images: [],
-        availabilityBlocks: []
+      // Add text fields
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('categoryId', formData.categoryId);
+      formDataToSend.append('unitsAvailable', formData.unitsAvailable);
+      formDataToSend.append('depositAmount', formData.depositAmount || 0);
+      
+      // Add nested objects as JSON strings
+      formDataToSend.append('baseRates', JSON.stringify(formData.baseRates));
+      formDataToSend.append('rules', JSON.stringify(formData.rules));
+      formDataToSend.append('availabilityBlocks', JSON.stringify(formData.availabilityBlocks));
+      
+      // Add image file if selected
+      if (selectedFiles.length > 0) {
+        formDataToSend.append('image', selectedFiles[0]);
+      }
+
+      // Make API call
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        body: formDataToSend,
+        credentials: 'include', // Include cookies for authentication
       });
-      setSelectedFiles([]);
-      setPreviewUrls([]);
+
+      const data = await response.json();
+
+      if (data.ok) {
+        // Show success toast notification
+        toast.success('🎉 Product added successfully!', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        
+        setMessage({ type: 'success', text: 'Product added successfully!' });
+        
+        // Reset form
+        setFormData({
+          name: '',
+          description: '',
+          categoryId: '',
+          unitsAvailable: 1,
+          depositAmount: '',
+          baseRates: { hourly: '', daily: '', weekly: '' },
+          rules: { minRentalHours: '', maxRentalDays: '' },
+          images: [],
+          availabilityBlocks: []
+        });
+        setSelectedFiles([]);
+        setPreviewUrls([]);
+      } else {
+        throw new Error(data.message || 'Failed to create product');
+      }
       
     } catch (error) {
-      setMessage({ type: 'error', text: error.message });
+      console.error('Error creating product:', error);
+      
+      // Show error toast notification
+      toast.error(`❌ ${error.message || 'Failed to create product'}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+      setMessage({ type: 'error', text: error.message || 'Failed to create product' });
     } finally {
       setLoading(false);
     }
@@ -200,8 +301,11 @@ function AddProduct() {
                   onChange={handleInputChange}
                   className="input"
                   required
+                  disabled={loadingCategories}
                 >
-                  <option value="">Select category</option>
+                  <option value="">
+                    {loadingCategories ? 'Loading categories...' : 'Select category'}
+                  </option>
                   {categories.map(category => (
                     <option key={category._id} value={category._id}>
                       {category.name}

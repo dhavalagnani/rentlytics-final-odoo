@@ -52,7 +52,12 @@ export const signup = async (req, res) => {
     const token = generateToken(user._id);
 
     // Set cookie
-    res.cookie("token", token, getCookieOptions());
+    const cookieOptions = getCookieOptions();
+    console.log("Setting cookie with options:", cookieOptions);
+    res.cookie("token", token, cookieOptions);
+
+    console.log("Signup successful for user:", user.email);
+    console.log("Cookie set:", token.substring(0, 20) + "...");
 
     res.status(201).json({
       ok: true,
@@ -100,7 +105,12 @@ export const login = async (req, res) => {
     const token = generateToken(user._id);
 
     // Set cookie
-    res.cookie("token", token, getCookieOptions());
+    const cookieOptions = getCookieOptions();
+    console.log("Setting cookie with options:", cookieOptions);
+    res.cookie("token", token, cookieOptions);
+
+    console.log("Login successful for user:", user.email);
+    console.log("Cookie set:", token.substring(0, 20) + "...");
 
     res.json({
       ok: true,

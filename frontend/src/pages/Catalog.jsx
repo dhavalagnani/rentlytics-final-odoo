@@ -12,17 +12,69 @@ function Catalog() {
 
   useEffect(() => {
     loadProducts()
+    loadCategories()
   }, [])
 
   const loadProducts = async () => {
     try {
       setLoading(true)
-      const data = await productService.getAllProducts()
+      // Try to get products excluding user's own products (authenticated)
+      let data = await productService.getAllProducts()
+      
+      // If that fails (user not authenticated), fall back to public products
+      if (data.length === 0) {
+        try {
+          data = await productService.getAllProductsPublic()
+        } catch (publicError) {
+          console.error('Error loading public products:', publicError)
+        }
+      }
+      
       setProducts(data)
     } catch (error) {
       console.error('Error loading products:', error)
+      // Fallback to public products if authenticated route fails
+      try {
+        const publicData = await productService.getAllProductsPublic()
+        setProducts(publicData)
+      } catch (publicError) {
+        console.error('Error loading public products:', publicError)
+      }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadCategories = async () => {
+    try {
+      const response = await fetch('/api/categories', {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setCategories(data.data.categories);
+      } else {
+        console.error('Failed to fetch categories:', data.message);
+        // Fallback to default categories
+        setCategories([
+          { _id: '1', name: 'Electronics' },
+          { _id: '2', name: 'Tools & Equipment' },
+          { _id: '3', name: 'Vehicles' },
+          { _id: '4', name: 'Furniture' },
+          { _id: '5', name: 'Sports Equipment' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Fallback to default categories
+      setCategories([
+        { _id: '1', name: 'Electronics' },
+        { _id: '2', name: 'Tools & Equipment' },
+        { _id: '3', name: 'Vehicles' },
+        { _id: '4', name: 'Furniture' },
+        { _id: '5', name: 'Sports Equipment' }
+      ]);
     }
   }
 
@@ -55,7 +107,7 @@ function Catalog() {
   }
 
   const handleViewProduct = (product) => {
-    navigate(`/product-details/${product.id}`)
+    navigate(`/product-details/${product._id}`)
   }
 
   const handleReserveProduct = async (product) => {
@@ -72,7 +124,7 @@ function Catalog() {
     }
   }
 
-  const categories = ['Camera', 'Projector', 'Heavy Equipment', 'Drone', 'Audio', 'Lighting']
+  const [categories, setCategories] = useState([])
 
   if (loading) {
     return (
@@ -100,7 +152,7 @@ function Catalog() {
           >
             <option value="">All Categories</option>
             {categories.map(category => (
-              <option key={category} value={category}>{category}</option>
+              <option key={category._id} value={category._id}>{category.name}</option>
             ))}
           </select>
           <button 
@@ -112,10 +164,10 @@ function Catalog() {
         </div>
       </div>
 
-      <div className="grid grid-auto-fill gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {products.map(product => (
           <ProductCard 
-            key={product.id} 
+            key={product._id} 
             product={product}
             onView={handleViewProduct}
             onReserve={handleReserveProduct}

@@ -1,9 +1,52 @@
 import Product from "../models/Product.model.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
-import { uploadImageFromBuffer, deleteImage } from "../utils/cloudinary.js";
+import { v2 as cloudinary } from "cloudinary";
 
-// Get all products with pagination
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "demkiu4xj",
+  api_key: process.env.CLOUDINARY_API_KEY || "591429751883776",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "Nnm8WjFb_bnwU6KDS6l_kz439TU",
+});
+
+// Get all products with pagination (excluding current user's products)
 export const getProducts = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  // Get current user ID from request (if authenticated)
+  const currentUserId = req.user?._id;
+
+  // Build query to exclude current user's products
+  const query = currentUserId ? { ownerId: { $ne: currentUserId } } : {};
+
+  const products = await Product.find(query)
+    .populate("ownerId", "firstName lastName email")
+    .populate("categoryId", "name")
+    .lean()
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Product.countDocuments(query);
+
+  res.json({
+    ok: true,
+    data: {
+      products,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    },
+    message: "Products retrieved successfully",
+  });
+});
+
+// Get all products with pagination (public - includes all products)
+export const getAllProductsPublic = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -57,6 +100,11 @@ export const getProductById = asyncHandler(async (req, res) => {
 
 // Create new product (only owners)
 export const createProduct = asyncHandler(async (req, res) => {
+  console.log("=== CREATE PRODUCT DEBUG ===");
+  console.log("Request body:", JSON.stringify(req.body, null, 2));
+  console.log("Request file:", req.file ? "File present" : "No file");
+  console.log("================================");
+  
   const {
     name,
     description,
@@ -64,58 +112,129 @@ export const createProduct = asyncHandler(async (req, res) => {
     baseRates,
     categoryId,
     unitsAvailable = 1,
+    rules,
+    availabilityBlocks = [],
   } = req.body;
-  const ownerId = req.user._id;
+  // const ownerId = req.user._id;
 
-  // Check if user is owner
-  if (!req.user.isOwner) {
-    return res.status(403).json({
-      ok: false,
-      message: "Only owners can create products",
-    });
-  }
+  // Parse JSON strings if they come as strings
+  let parsedBaseRates = baseRates;
+  let parsedRules = rules;
+  let parsedAvailabilityBlocks = availabilityBlocks;
 
-  // Validate required fields
-  if (!name || !description || !depositAmount || !baseRates || !categoryId) {
+  try {
+    if (typeof baseRates === 'string') {
+      parsedBaseRates = JSON.parse(baseRates);
+      console.log("Parsed baseRates:", parsedBaseRates);
+    }
+    if (typeof rules === 'string') {
+      parsedRules = JSON.parse(rules);
+      console.log("Parsed rules:", parsedRules);
+    }
+    if (typeof availabilityBlocks === 'string') {
+      parsedAvailabilityBlocks = JSON.parse(availabilityBlocks);
+      console.log("Parsed availabilityBlocks:", parsedAvailabilityBlocks);
+    }
+  } catch (error) {
+    console.error('Error parsing JSON fields:', error);
     return res.status(400).json({
       ok: false,
-      message:
-        "Name, description, deposit amount, base rates, and category are required",
+      message: 'Invalid JSON format in request fields',
     });
   }
 
+  // Check if user is owner
+  // if (!req.user.isOwner) {
+  //   return res.status(403).json({
+  //     ok: false,
+  //     message: "Only owners can create products",
+  //   });
+  // }
+
+  // Validate required fields
+  if (!name || !description || !categoryId) {
+    return res.status(400).json({
+      ok: false,
+      message: "Name, description, and category are required",
+    });
+  }
+
+  // Generate a unique productId
+  const timestamp = Date.now();
+  const randomSuffix = Math.random().toString(36).substring(2, 8);
+  const productId = `PROD_${timestamp}_${randomSuffix}`;
+
+  // Initialize product data
   const productData = {
-    ownerId,
+    productId,
+    ownerId: req.user._id,
     categoryId,
     name,
     description,
-    depositAmount,
-    baseRates,
+    depositAmount: depositAmount || 0,
+    baseRates: parsedBaseRates || { hourly: 0, daily: 0, weekly: 0 },
     unitsAvailable,
+    rules: parsedRules || { minRentalHours: 1, maxRentalDays: 30 },
+    availabilityBlocks: parsedAvailabilityBlocks,
+    images: [],
   };
 
   // Handle image upload if provided
   if (req.file) {
     try {
-      const uploadResult = await uploadImageFromBuffer(
-        req.file.buffer,
-        "product-images"
-      );
+      console.log("=== UPLOADING IMAGE TO CLOUDINARY ===");
+      
+      // Upload image to Cloudinary using buffer
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          {
+            folder: 'product-images',
+            resource_type: 'image',
+            transformation: [
+              { width: 800, height: 600, crop: "limit" },
+              { quality: "auto" },
+            ],
+          },
+          (error, result) => {
+            if (error) {
+              console.error("Cloudinary upload error:", error);
+              reject(error);
+            } else {
+              console.log("✅ Image uploaded to Cloudinary successfully!");
+              console.log("Public ID:", result.public_id);
+              console.log("Secure URL:", result.secure_url);
+              resolve(result);
+            }
+          }
+        ).end(req.file.buffer);
+      });
+      
       productData.images = [
         {
-          public_id: uploadResult.public_id,
-          url: uploadResult.url,
+          public_id: result.public_id,
+          url: result.secure_url,
         },
       ];
+      
     } catch (error) {
-      console.error("Error uploading product image:", error);
+      console.error("❌ Error uploading image to Cloudinary:", error.message);
+      
+      if (error.message.includes('Must supply api_key')) {
+        return res.status(500).json({
+          ok: false,
+          message: "Image upload service not configured. Please check Cloudinary credentials.",
+        });
+      }
+      
       return res.status(500).json({
         ok: false,
-        message: "Failed to upload product image",
+        message: "Failed to upload image. Please try again.",
       });
     }
   }
 
+  // Create and save the product
+  console.log("Final productData before saving:", JSON.stringify(productData, null, 2));
   const product = new Product(productData);
   await product.save();
 
@@ -135,13 +254,13 @@ export const updateProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
 
-  // Check if user is owner
-  if (!req.user.isOwner) {
-    return res.status(403).json({
-      ok: false,
-      message: "Only owners can update products",
-    });
-  }
+  // // Check if user is owner
+  // if (!req.user.isOwner) {
+  //   return res.status(403).json({
+  //     ok: false,
+  //     message: "Only owners can update products",
+  //   });
+  // }
 
   const product = await Product.findById(id);
   if (!product) {
@@ -162,33 +281,65 @@ export const updateProduct = asyncHandler(async (req, res) => {
   // Handle image upload if provided
   if (req.file) {
     try {
+      console.log("=== UPLOADING UPDATED IMAGE TO CLOUDINARY ===");
+      
       // Delete old images if they exist
       if (product.images && product.images.length > 0) {
         for (const image of product.images) {
           try {
-            await deleteImage(image.public_id);
+            await cloudinary.uploader.destroy(image.public_id);
+            console.log("✅ Deleted old image:", image.public_id);
           } catch (error) {
             console.error("Error deleting old image:", error);
           }
         }
       }
 
-      // Upload new image
-      const uploadResult = await uploadImageFromBuffer(
-        req.file.buffer,
-        "product-images"
-      );
+      // Upload new image to Cloudinary using buffer
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          {
+            folder: 'product-images',
+            resource_type: 'image',
+            transformation: [
+              { width: 800, height: 600, crop: "limit" },
+              { quality: "auto" },
+            ],
+          },
+          (error, result) => {
+            if (error) {
+              console.error("Cloudinary upload error:", error);
+              reject(error);
+            } else {
+              console.log("✅ Updated image uploaded to Cloudinary successfully!");
+              console.log("Public ID:", result.public_id);
+              console.log("Secure URL:", result.secure_url);
+              resolve(result);
+            }
+          }
+        ).end(req.file.buffer);
+      });
+      
       updateData.images = [
         {
-          public_id: uploadResult.public_id,
-          url: uploadResult.url,
+          public_id: result.public_id,
+          url: result.secure_url,
         },
       ];
+      
     } catch (error) {
-      console.error("Error uploading product image:", error);
+      console.error("❌ Error uploading updated image to Cloudinary:", error.message);
+      
+      if (error.message.includes('Must supply api_key')) {
+        return res.status(500).json({
+          ok: false,
+          message: "Image upload service not configured. Please check Cloudinary credentials.",
+        });
+      }
+      
       return res.status(500).json({
         ok: false,
-        message: "Failed to upload product image",
+        message: "Failed to upload updated image. Please try again.",
       });
     }
   }
@@ -211,13 +362,13 @@ export const updateProduct = asyncHandler(async (req, res) => {
 export const deleteProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  // Check if user is owner
-  if (!req.user.isOwner) {
-    return res.status(403).json({
-      ok: false,
-      message: "Only owners can delete products",
-    });
-  }
+  // // Check if user is owner
+  // if (!req.user.isOwner) {
+  //   return res.status(403).json({
+  //     ok: false,
+  //     message: "Only owners can delete products",
+  //   });
+  // }
 
   const product = await Product.findById(id);
   if (!product) {
@@ -239,7 +390,8 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   if (product.images && product.images.length > 0) {
     for (const image of product.images) {
       try {
-        await deleteImage(image.public_id);
+        await cloudinary.uploader.destroy(image.public_id);
+        console.log("✅ Deleted image from Cloudinary:", image.public_id);
       } catch (error) {
         console.error("Error deleting image from Cloudinary:", error);
       }
@@ -311,6 +463,36 @@ export const getProductsByOwner = asyncHandler(async (req, res) => {
   });
 });
 
+// Get current user's products
+export const getMyProducts = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const products = await Product.find({ ownerId: currentUserId })
+    .populate("categoryId", "name")
+    .lean()
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Product.countDocuments({ ownerId: currentUserId });
+
+  res.json({
+    ok: true,
+    data: {
+      products,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    },
+    message: "My products retrieved successfully",
+  });
+});
+
 // Add product image
 export const addProductImage = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -339,15 +521,37 @@ export const addProductImage = asyncHandler(async (req, res) => {
   }
 
   try {
-    const uploadResult = await uploadImageFromBuffer(
-      req.file.buffer,
-      "product-images"
-    );
+    console.log("=== UPLOADING ADDITIONAL IMAGE TO CLOUDINARY ===");
+    
+    // Upload image to Cloudinary using buffer
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: 'product-images',
+          resource_type: 'image',
+          transformation: [
+            { width: 800, height: 600, crop: "limit" },
+            { quality: "auto" },
+          ],
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(error);
+          } else {
+            console.log("✅ Additional image uploaded to Cloudinary successfully!");
+            console.log("Public ID:", result.public_id);
+            console.log("Secure URL:", result.secure_url);
+            resolve(result);
+          }
+        }
+      ).end(req.file.buffer);
+    });
 
     // Add new image to existing images array
     const newImage = {
-      public_id: uploadResult.public_id,
-      url: uploadResult.url,
+      public_id: result.public_id,
+      url: result.secure_url,
     };
 
     product.images = product.images || [];
@@ -407,7 +611,8 @@ export const removeProductImage = asyncHandler(async (req, res) => {
 
   try {
     // Delete from Cloudinary
-    await deleteImage(imageToRemove.public_id);
+    await cloudinary.uploader.destroy(imageToRemove.public_id);
+    console.log("✅ Deleted image from Cloudinary:", imageToRemove.public_id);
 
     // Remove from array
     product.images.splice(imageIndexNum, 1);

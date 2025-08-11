@@ -63,9 +63,10 @@ export const getCookieOptions = () => {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: isProduction ? 'strict' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    path: '/'
+    path: '/',
+    domain: isProduction ? undefined : undefined // Let browser set domain in development
   };
 };
 
@@ -76,8 +77,9 @@ export const getClearCookieOptions = () => {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: isProduction ? 'strict' : 'lax',
     expires: new Date(0),
-    path: '/'
+    path: '/',
+    domain: isProduction ? undefined : undefined // Let browser set domain in development
   };
 };

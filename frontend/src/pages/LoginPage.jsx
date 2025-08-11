@@ -32,11 +32,12 @@ function LoginPage() {
       const response = await authAPI.getCurrentUser();
       if (response.ok) {
         // User is already logged in, redirect to intended page
+        console.log('User already authenticated, redirecting to:', from);
         navigate(from, { replace: true });
       }
     } catch (error) {
       // User is not authenticated, stay on login page
-      console.log('User not authenticated');
+      console.log('User not authenticated, staying on login page');
     }
   };
 
@@ -68,7 +69,8 @@ function LoginPage() {
         if (data.ok) {
           toast.success(`Welcome back, ${data.firstName}!`);
           resetForm();
-          // Redirect to the page they were trying to access
+          // Redirect to the page they were trying to access immediately
+          // Don't call checkCurrentUser again since login was successful
           navigate(from, { replace: true });
         } else {
           toast.error(data.message || "Login failed");

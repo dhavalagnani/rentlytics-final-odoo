@@ -5,7 +5,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // Create axios instance with default configuration
 const api = axios.create({
-  baseURL: `${API_BASE}/api`,
+  baseURL: "/api", // Use relative path since Vite proxy handles the full URL
   withCredentials: true,
   timeout: 10000,
   headers: {
@@ -17,6 +17,8 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     console.log("API Request:", config.method?.toUpperCase(), config.url);
+    console.log("Request headers:", config.headers);
+    console.log("With credentials:", config.withCredentials);
     return config;
   },
   (error) => {
@@ -29,6 +31,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     console.log("API Response:", response.status, response.config.url);
+    console.log("Response headers:", response.headers);
+    console.log("Set-Cookie header:", response.headers['set-cookie']);
     return response;
   },
   (error) => {
@@ -77,14 +81,27 @@ export const authAPI = {
 
   // Login user
   login: async (credentials) => {
-    const response = await api.post("/auth/login", credentials);
-    return response.data;
+    try {
+      console.log("Login attempt with:", { email: credentials.email });
+      const response = await api.post("/auth/login", credentials);
+      console.log("Login response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Login error:", error.response?.data || error.message);
+      throw error;
+    }
   },
 
   // Get current user
   getCurrentUser: async () => {
-    const response = await api.get("/auth/me");
-    return response.data;
+    try {
+      const response = await api.get("/auth/me");
+      console.log("getCurrentUser response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("getCurrentUser error:", error.response?.data || error.message);
+      throw error;
+    }
   },
 
   // Logout user

@@ -85,7 +85,7 @@ function App() {
             <Layout><CustomerPortal /></Layout>
           </ProtectedRoute>
         } />
-        <Route path="/product-details" element={
+        <Route path="/product-details/:id" element={
           <ProtectedRoute>
             <Layout><ProductDetails /></Layout>
           </ProtectedRoute>

@@ -2,7 +2,14 @@ import User from '../models/User.model.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { getDashboardData, getDetailedBookingReport, getTransactionReport, getProductAnalytics } from '../services/report.service.js';
 import { generateDashboardCSV, generateBookingsCSV, generateTransactionsCSV, setCSVHeaders } from '../utils/reportGenerator.js';
-import { uploadImageFromBuffer, deleteImage } from '../utils/cloudinary.js';
+import { v2 as cloudinary } from "cloudinary";
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "demkiu4xj",
+  api_key: process.env.CLOUDINARY_API_KEY || "591429751883776",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "Nnm8WjFb_bnwU6KDS6l_kz439TU",
+});
 
 /**
  * Get user dashboard data
@@ -182,25 +189,47 @@ export const updateProfilePicture = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Upload new image to Cloudinary
-    const uploadResult = await uploadImageFromBuffer(
-      req.file.buffer,
-      'profile-pictures'
-    );
-
+    console.log("=== UPLOADING PROFILE PICTURE TO CLOUDINARY ===");
+    
     // Delete old profile picture if exists
     if (user.profilePicture?.public_id) {
       try {
-        await deleteImage(user.profilePicture.public_id);
+        await cloudinary.uploader.destroy(user.profilePicture.public_id);
+        console.log("✅ Deleted old profile picture:", user.profilePicture.public_id);
       } catch (error) {
         console.error('Error deleting old profile picture:', error);
       }
     }
 
+    // Upload new image to Cloudinary using buffer
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: 'profile-pictures',
+          resource_type: 'image',
+          transformation: [
+            { width: 400, height: 400, crop: "fill" },
+            { quality: "auto" },
+          ],
+        },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(error);
+          } else {
+            console.log("✅ Profile picture uploaded to Cloudinary successfully!");
+            console.log("Public ID:", result.public_id);
+            console.log("Secure URL:", result.secure_url);
+            resolve(result);
+          }
+        }
+      ).end(req.file.buffer);
+    });
+
     // Update user profile picture
     user.profilePicture = {
-      public_id: uploadResult.public_id,
-      url: uploadResult.url
+      public_id: result.public_id,
+      url: result.secure_url
     };
 
     await user.save();
@@ -213,7 +242,15 @@ export const updateProfilePicture = asyncHandler(async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error updating profile picture:', error);
+    console.error('❌ Error updating profile picture:', error.message);
+    
+    if (error.message.includes('Must supply api_key')) {
+      return res.status(500).json({
+        ok: false,
+        message: "Image upload service not configured. Please check Cloudinary credentials.",
+      });
+    }
+    
     res.status(500).json({
       ok: false,
       message: 'Failed to update profile picture'

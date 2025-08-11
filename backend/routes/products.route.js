@@ -2,12 +2,14 @@ import express from "express";
 import multer from "multer";
 import {
   getProducts,
+  getAllProductsPublic,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
   updateUnitsAvailable,
   getProductsByOwner,
+  getMyProducts,
   addProductImage,
   removeProductImage,
 } from "../controllers/product.controller.js";
@@ -31,7 +33,9 @@ const upload = multer({
 });
 
 // Public routes
-router.get("/", getProducts);
+router.get("/", authenticateUser, getProducts); // Authenticated route - excludes user's own products
+router.get("/public", getAllProductsPublic); // Public route - includes all products
+router.get("/my", authenticateUser, getMyProducts); // Get current user's products
 router.get("/:id", getProductById);
 router.get("/owner/:ownerId", getProductsByOwner);
 

@@ -5,7 +5,9 @@ import User from "../models/User.model.js";
 export const authenticateUser = async (req, res, next) => {
   try {
     console.log("=== AUTH MIDDLEWARE DEBUG ===");
+    console.log("Request headers:", req.headers);
     console.log("Cookies:", req.cookies);
+    console.log("Cookie header:", req.headers.cookie);
     
     const token = req.cookies.token;
 

@@ -41,7 +41,10 @@ const productSchema = new mongoose.Schema(
     },
     name: { type: String, required: true },
     description: { type: String, required: true },
-    images: [{ type: String }],
+    images: [{
+      public_id: { type: String },
+      url: { type: String }
+    }],
     unitsAvailable: { type: Number, required: true, default: 1 },
     depositAmount: { type: Number, required: true },
     baseRates: baseRatesSchema,

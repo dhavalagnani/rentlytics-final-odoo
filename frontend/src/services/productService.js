@@ -2,15 +2,35 @@
 import api from './apiService.js';
 
 class ProductService {
-  // Get all products
+  // Get all products (excluding user's own products)
   async getAllProducts() {
     try {
-      // Temporarily return empty array until backend route is created
-      return [];
-      // const response = await api.get('/api/products');
-      // return response.data.products || [];
+      const response = await api.get('/api/products');
+      return response.data.data.products || [];
     } catch (error) {
       console.error('Error fetching products:', error);
+      return [];
+    }
+  }
+
+  // Get all products (public - includes all products)
+  async getAllProductsPublic() {
+    try {
+      const response = await api.get('/api/products/public');
+      return response.data.data.products || [];
+    } catch (error) {
+      console.error('Error fetching public products:', error);
+      return [];
+    }
+  }
+
+  // Get user's own products
+  async getMyProducts() {
+    try {
+      const response = await api.get('/api/products/my');
+      return response.data.data.products || [];
+    } catch (error) {
+      console.error('Error fetching my products:', error);
       return [];
     }
   }
@@ -44,10 +64,8 @@ class ProductService {
   // Get product by ID
   async getProductById(id) {
     try {
-      // Temporarily return null until backend route is created
-      return null;
-      // const response = await api.get(`/api/products/${id}`);
-      // return response.data.product;
+      const response = await api.get(`/api/products/${id}`);
+      return response.data.data;
     } catch (error) {
       console.error('Error fetching product:', error);
       return null;

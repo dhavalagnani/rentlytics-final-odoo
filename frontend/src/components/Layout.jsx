@@ -50,7 +50,7 @@ function Layout({ children, showSidebar = true, showFooter = true, ...props }) {
   // Sanitize props to remove any jsx attributes
   const sanitizedProps = sanitizeProps(props);
   return (
-    <div className={`${showSidebar ? 'h-screen overflow-hidden' : showFooter ? 'min-h-screen' : 'h-screen overflow-hidden'} flex flex-col bg-surface`} {...sanitizedProps}>
+    <div className={`${showSidebar ? 'h-screen overflow-hidden' : 'min-h-screen'} flex flex-col bg-surface`} {...sanitizedProps}>
       {/* Header - fixed at top */}
       <header className="fixed top-0 left-0 right-0 z-20 bg-surface-elev border-b border-border/60">
         <Navbar
@@ -69,9 +69,9 @@ function Layout({ children, showSidebar = true, showFooter = true, ...props }) {
         )}
 
         {/* Main content - scrollable with footer at bottom */}
-        <main className={`flex-1 ${showSidebar ? 'overflow-auto ml-64 h-full' : showFooter ? 'overflow-visible' : 'overflow-hidden'} ${!showSidebar ? 'w-full' : ''}`}>
+        <main className={`flex-1 ${showSidebar ? 'overflow-auto ml-64 h-full' : 'overflow-visible'} ${!showSidebar ? 'w-full' : ''}`}>
           <div className={`${showSidebar ? 'min-h-full flex flex-col' : 'w-full'}`}>
-            <div className={`${showSidebar ? 'flex-1' : ''} ${showFooter ? 'p-4 sm:p-6 lg:p-8' : 'h-full'}`}>
+            <div className={`${showSidebar ? 'flex-1' : ''} ${showFooter ? 'p-4 sm:p-6 lg:p-8' : 'p-4 sm:p-6 lg:p-8'}`}>
               {React.cloneElement(children, { user })}
             </div>
             
