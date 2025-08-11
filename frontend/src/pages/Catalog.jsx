@@ -6,7 +6,6 @@ import productService from '../services/productService'
 function Catalog() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const navigate = useNavigate()
 
@@ -78,28 +77,21 @@ function Catalog() {
     }
   }
 
-  const handleSearch = async (query) => {
-    setSearchQuery(query)
-    if (query.trim()) {
-      try {
-        const results = await productService.searchProducts(query)
-        setProducts(results)
-      } catch (error) {
-        console.error('Error searching products:', error)
-      }
-    } else {
-      loadProducts()
-    }
-  }
 
-  const handleCategoryFilter = async (category) => {
-    setSelectedCategory(category)
-    if (category) {
+
+  const handleCategoryFilter = async (categoryId) => {
+    setSelectedCategory(categoryId)
+    if (categoryId) {
       try {
-        const results = await productService.getProductsByCategory(category)
+        setLoading(true)
+        const results = await productService.getProductsByCategory(categoryId)
         setProducts(results)
       } catch (error) {
         console.error('Error filtering by category:', error)
+        // Fallback to loading all products
+        loadProducts()
+      } finally {
+        setLoading(false)
       }
     } else {
       loadProducts()
@@ -136,33 +128,38 @@ function Catalog() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Catalog</h2>
-        <div className="flex gap-2">
-          <input 
-            className="input w-64" 
-            placeholder="Search products..." 
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-          <select 
-            className="input w-32"
-            value={selectedCategory}
-            onChange={(e) => handleCategoryFilter(e.target.value)}
-          >
-            <option value="">All Categories</option>
-            {categories.map(category => (
-              <option key={category._id} value={category._id}>{category.name}</option>
-            ))}
-          </select>
-          <button 
-            className="btn btn-primary"
-            onClick={() => navigate('/add-product')}
-          >
-            Add Product
-          </button>
-        </div>
-      </div>
+             <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+         <h2 className="text-2xl font-bold text-white">Catalog</h2>
+         <div className="flex gap-2">
+           <select 
+             className="input w-32"
+             value={selectedCategory}
+             onChange={(e) => handleCategoryFilter(e.target.value)}
+           >
+             <option value="">All Categories</option>
+             {categories.map(category => (
+               <option key={category._id} value={category._id}>{category.name}</option>
+             ))}
+           </select>
+           {selectedCategory && (
+             <button 
+               className="btn btn-ghost"
+               onClick={() => {
+                 setSelectedCategory('')
+                 loadProducts()
+               }}
+             >
+               Clear Filters
+             </button>
+           )}
+           <button 
+             className="btn btn-primary"
+             onClick={() => navigate('/add-product')}
+           >
+             Add Product
+           </button>
+         </div>
+       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {products.map(product => (

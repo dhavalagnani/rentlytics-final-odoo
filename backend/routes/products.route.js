@@ -4,6 +4,8 @@ import {
   getProducts,
   getAllProductsPublic,
   getProductById,
+  getProductsByCategory,
+  searchProducts,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -35,6 +37,8 @@ const upload = multer({
 // Public routes
 router.get("/", authenticateUser, getProducts); // Authenticated route - excludes user's own products
 router.get("/public", getAllProductsPublic); // Public route - includes all products
+router.get("/search", searchProducts); // Search products by name, category, and price
+router.get("/category/:categoryId", getProductsByCategory); // Filter products by category
 router.get("/my", authenticateUser, getMyProducts); // Get current user's products
 router.get("/:id", getProductById);
 router.get("/owner/:ownerId", getProductsByOwner);

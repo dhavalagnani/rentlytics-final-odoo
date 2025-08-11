@@ -36,12 +36,25 @@ class ProductService {
   }
 
   // Search products
-  async searchProducts(query) {
+  async searchProducts(searchParams) {
     try {
-      // Temporarily return empty array until backend route is created
-      return [];
-      // const response = await api.get(`/api/products/search?q=${encodeURIComponent(query)}`);
-      // return response.data.products || [];
+      const params = new URLSearchParams();
+      
+      if (searchParams.query) {
+        params.append('q', searchParams.query);
+      }
+      if (searchParams.category) {
+        params.append('category', searchParams.category);
+      }
+      if (searchParams.minPrice) {
+        params.append('minPrice', searchParams.minPrice);
+      }
+      if (searchParams.maxPrice) {
+        params.append('maxPrice', searchParams.maxPrice);
+      }
+      
+      const response = await api.get(`/products/search?${params.toString()}`);
+      return response.data.data.products || [];
     } catch (error) {
       console.error('Error searching products:', error);
       return [];
@@ -49,12 +62,10 @@ class ProductService {
   }
 
   // Get products by category
-  async getProductsByCategory(category) {
+  async getProductsByCategory(categoryId) {
     try {
-      // Temporarily return empty array until backend route is created
-      return [];
-      // const response = await api.get(`/api/products/category/${encodeURIComponent(category)}`);
-      // return response.data.products || [];
+      const response = await api.get(`/products/category/${categoryId}`);
+      return response.data.data.products || [];
     } catch (error) {
       console.error('Error fetching products by category:', error);
       return [];

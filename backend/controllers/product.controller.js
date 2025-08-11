@@ -98,6 +98,113 @@ export const getProductById = asyncHandler(async (req, res) => {
   });
 });
 
+// Get products by category
+export const getProductsByCategory = asyncHandler(async (req, res) => {
+  const { categoryId } = req.params;
+  const currentUserId = req.user?._id;
+
+  try {
+    let query = { categoryId };
+    
+    // If user is authenticated, exclude their own products
+    if (currentUserId) {
+      query.ownerId = { $ne: currentUserId };
+    }
+
+    const products = await Product.find(query)
+      .populate("ownerId", "firstName lastName")
+      .populate("categoryId", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({
+      ok: true,
+      data: {
+        products,
+        count: products.length
+      },
+      message: "Products filtered by category successfully",
+    });
+  } catch (error) {
+    console.error('Error filtering products by category:', error);
+    res.status(500).json({
+      ok: false,
+      message: "Failed to filter products by category",
+    });
+  }
+});
+
+// Search products by name, category, and price
+export const searchProducts = asyncHandler(async (req, res) => {
+  const { q: searchQuery, category, minPrice, maxPrice } = req.query;
+  const currentUserId = req.user?._id;
+
+  try {
+    let query = {};
+    
+    // If user is authenticated, exclude their own products
+    if (currentUserId) {
+      query.ownerId = { $ne: currentUserId };
+    }
+
+    // Search by product name or description
+    if (searchQuery) {
+      query.$or = [
+        { name: { $regex: searchQuery, $options: 'i' } },
+        { description: { $regex: searchQuery, $options: 'i' } }
+      ];
+    }
+
+    // Filter by category
+    if (category) {
+      query.categoryId = category;
+    }
+
+    // Filter by price range
+    if (minPrice || maxPrice) {
+      query.$or = query.$or || [];
+      
+      // Search in baseRates (hourly, daily, weekly)
+      const priceQuery = {};
+      if (minPrice) {
+        priceQuery.$gte = parseFloat(minPrice);
+      }
+      if (maxPrice) {
+        priceQuery.$lte = parseFloat(maxPrice);
+      }
+      
+      if (Object.keys(priceQuery).length > 0) {
+        query.$or.push(
+          { 'baseRates.hourly': priceQuery },
+          { 'baseRates.daily': priceQuery },
+          { 'baseRates.weekly': priceQuery }
+        );
+      }
+    }
+
+    const products = await Product.find(query)
+      .populate("ownerId", "firstName lastName")
+      .populate("categoryId", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({
+      ok: true,
+      data: {
+        products,
+        count: products.length
+      },
+      message: "Products searched successfully",
+    });
+  } catch (error) {
+    console.error('Error searching products:', error);
+    res.status(500).json({
+      ok: false,
+      message: "Failed to search products",
+    });
+  }
+});
+
 // Create new product (only owners)
 export const createProduct = asyncHandler(async (req, res) => {
   console.log("=== CREATE PRODUCT DEBUG ===");

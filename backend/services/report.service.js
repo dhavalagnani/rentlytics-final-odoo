@@ -13,7 +13,6 @@ export const getDashboardData = async (userId) => {
     // Get all bookings for the user
     const bookings = await Booking.find({ userId })
       .populate('productId', 'name category')
-      .populate('orderId', 'totalAmount status')
       .sort({ createdAt: -1 });
 
     // Calculate total bookings
@@ -21,19 +20,19 @@ export const getDashboardData = async (userId) => {
 
     // Calculate total amount spent
     const totalAmountSpent = bookings.reduce((total, booking) => {
-      return total + (booking.totalAmount || 0);
+      return total + (booking.pricingSnapshot?.totalPrice || 0);
     }, 0);
 
-    // Calculate active rentals (bookings with status 'active' or 'ongoing')
+    // Calculate active rentals (bookings with status 'confirmed' or 'pickedup')
     const totalActiveRentals = bookings.filter(booking => 
-      ['active', 'ongoing'].includes(booking.status)
+      ['confirmed', 'pickedup'].includes(booking.status)
     ).length;
 
-    // Calculate late returns (bookings past end date with status 'active' or 'ongoing')
+    // Calculate late returns (bookings past end date with status 'confirmed' or 'pickedup')
     const currentDate = new Date();
     const lateReturnsCount = bookings.filter(booking => {
       const endDate = new Date(booking.endDate);
-      return endDate < currentDate && ['active', 'ongoing'].includes(booking.status);
+      return endDate < currentDate && ['confirmed', 'pickedup'].includes(booking.status);
     }).length;
 
     // Get most rented products
@@ -52,7 +51,7 @@ export const getDashboardData = async (userId) => {
 
     // Get recent transactions
     const transactions = await Transaction.find({ userId })
-      .populate('orderId', 'totalAmount')
+      .populate('orderId')
       .sort({ createdAt: -1 })
       .limit(10);
 
@@ -176,7 +175,7 @@ export const getProductAnalytics = async (userId) => {
         }
 
         productStats[productId].totalRentals += 1;
-        productStats[productId].totalSpent += booking.totalAmount || 0;
+        productStats[productId].totalSpent += booking.pricingSnapshot?.totalPrice || 0;
         
         const duration = Math.ceil(
           (new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60 * 60 * 24)

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import productService from '../services/productService'
 
 export default function Navbar({ user, onLogout }) {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -7,6 +8,10 @@ export default function Navbar({ user, onLogout }) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showSearchResults, setShowSearchResults] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -25,6 +30,41 @@ export default function Navbar({ user, onLogout }) {
 
   const handleSearchToggle = () => {
     setIsSearchOpen(!isSearchOpen)
+  }
+
+  const handleSearch = async (query) => {
+    setSearchQuery(query)
+    
+    if (query.trim().length < 2) {
+      setSearchResults([])
+      setShowSearchResults(false)
+      return
+    }
+
+    try {
+      setIsSearching(true)
+      const results = await productService.searchProducts({ query })
+      setSearchResults(results)
+      setShowSearchResults(true)
+    } catch (error) {
+      console.error('Error searching products:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handleSearchResultClick = (product) => {
+    setShowSearchResults(false)
+    setSearchQuery('')
+    navigate(`/product-details/${product._id}`)
+  }
+
+  const handleSearchBlur = () => {
+    // Delay hiding results to allow for clicks
+    setTimeout(() => {
+      setShowSearchResults(false)
+    }, 200)
   }
 
   const handleNotificationsToggle = () => {
@@ -79,12 +119,53 @@ export default function Navbar({ user, onLogout }) {
             <div className="relative w-full">
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search by name, category, or price..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                onBlur={handleSearchBlur}
                 className="w-full bg-surface-elev/50 border border-border/60 rounded-lg pl-9 pr-4 py-2 text-white placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-primary/60 focus:border-transparent transition-all text-sm"
               />
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
+              
+              {/* Search Results Dropdown */}
+              {showSearchResults && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-surface-elev border border-border/60 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                  {isSearching ? (
+                    <div className="p-4 text-center">
+                      <div className="text-ink-muted text-sm">Searching...</div>
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div>
+                      {searchResults.map((product) => (
+                        <div
+                          key={product._id}
+                          onClick={() => handleSearchResultClick(product)}
+                          className="p-3 border-b border-border/40 last:border-b-0 hover:bg-white/5 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary text-xs font-semibold">
+                              {product.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-white text-sm font-medium truncate">{product.name}</div>
+                              <div className="text-ink-muted text-xs truncate">{product.categoryId?.name}</div>
+                              <div className="text-ink-muted text-xs">
+                                ₹{product.baseRates?.daily || 0}/day
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : searchQuery.trim().length >= 2 ? (
+                    <div className="p-4 text-center">
+                      <div className="text-ink-muted text-sm">No products found</div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </div>
           </div>
 
@@ -205,12 +286,53 @@ export default function Navbar({ user, onLogout }) {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search by name, category, or price..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                onBlur={handleSearchBlur}
                 className="w-full bg-surface-elev/50 border border-border/60 rounded-lg pl-9 pr-4 py-2 text-white placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-primary/60 focus:border-transparent transition-all text-sm"
               />
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
+              
+              {/* Mobile Search Results Dropdown */}
+              {showSearchResults && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-surface-elev border border-border/60 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                  {isSearching ? (
+                    <div className="p-4 text-center">
+                      <div className="text-ink-muted text-sm">Searching...</div>
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div>
+                      {searchResults.map((product) => (
+                        <div
+                          key={product._id}
+                          onClick={() => handleSearchResultClick(product)}
+                          className="p-3 border-b border-border/40 last:border-b-0 hover:bg-white/5 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary text-xs font-semibold">
+                              {product.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-white text-sm font-medium truncate">{product.name}</div>
+                              <div className="text-ink-muted text-xs truncate">{product.categoryId?.name}</div>
+                              <div className="text-ink-muted text-xs">
+                                ₹{product.baseRates?.daily || 0}/day
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : searchQuery.trim().length >= 2 ? (
+                    <div className="p-4 text-center">
+                      <div className="text-ink-muted text-sm">No products found</div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </div>
           </div>
         )}
