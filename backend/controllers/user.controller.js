@@ -1,225 +1,290 @@
-import User from "../models/User.model.js";
-import Booking from "../models/Booking.model.js";
-import { validateRequest } from "../utils/validateRequest.js";
+import User from '../models/User.model.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
+import { getDashboardData, getDetailedBookingReport, getTransactionReport, getProductAnalytics } from '../services/report.service.js';
+import { generateDashboardCSV, generateBookingsCSV, generateTransactionsCSV, setCSVHeaders } from '../utils/reportGenerator.js';
+import { uploadImageFromBuffer, deleteImage } from '../utils/cloudinary.js';
 
-// Get all users with pagination
-export const getUsers = async (req, res, next) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+/**
+ * Get user dashboard data
+ * GET /api/user/dashboard
+ */
+export const getDashboard = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  
+  const dashboardData = await getDashboardData(userId.toString());
+  
+  // Add user info to dashboard data
+  const userInfo = {
+    firstName: req.user.firstName,
+    lastName: req.user.lastName,
+    email: req.user.email
+  };
 
-    const users = await User.find()
-      .select("-passwordHash")
-      .lean()
-      .skip(skip)
-      .limit(limit);
+  res.json({
+    ok: true,
+    message: 'Dashboard data retrieved successfully',
+    data: {
+      ...dashboardData,
+      userInfo
+    }
+  });
+});
 
-    const total = await User.countDocuments();
+/**
+ * Download dashboard report as CSV
+ * GET /api/user/dashboard/download
+ */
+export const downloadDashboardReport = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  
+  const dashboardData = await getDashboardData(userId.toString());
+  
+  // Add user info
+  const userInfo = {
+    firstName: req.user.firstName,
+    lastName: req.user.lastName,
+    email: req.user.email
+  };
 
-    res.json({
-      success: true,
-      data: {
-        users,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit),
-        },
-      },
-      message: "Users retrieved successfully",
-    });
-  } catch (error) {
-    next(error);
+  const csvContent = generateDashboardCSV({
+    ...dashboardData,
+    userInfo
+  });
+
+  setCSVHeaders(res, `dashboard-report-${userId}-${new Date().toISOString().split('T')[0]}`);
+  res.send(csvContent);
+});
+
+/**
+ * Get detailed booking report
+ * GET /api/user/bookings/report
+ */
+export const getBookingReport = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { startDate, endDate, status, download } = req.query;
+
+  const filters = {};
+  if (startDate) filters.startDate = startDate;
+  if (endDate) filters.endDate = endDate;
+  if (status) filters.status = status;
+
+  const bookings = await getDetailedBookingReport(userId.toString(), filters);
+
+  if (download === 'true') {
+    const csvContent = generateBookingsCSV(bookings);
+    setCSVHeaders(res, `bookings-report-${userId}-${new Date().toISOString().split('T')[0]}`);
+    return res.send(csvContent);
   }
-};
 
-// Get user by ID
-export const getUserById = async (req, res, next) => {
+  res.json({
+    ok: true,
+    message: 'Booking report retrieved successfully',
+    data: bookings
+  });
+});
+
+/**
+ * Get transaction report
+ * GET /api/user/transactions/report
+ */
+export const getTransactionReportController = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { startDate, endDate, status, download } = req.query;
+
+  const filters = {};
+  if (startDate) filters.startDate = startDate;
+  if (endDate) filters.endDate = endDate;
+  if (status) filters.status = status;
+
+  const transactions = await getTransactionReport(userId.toString(), filters);
+
+  if (download === 'true') {
+    const csvContent = generateTransactionsCSV(transactions);
+    setCSVHeaders(res, `transactions-report-${userId}-${new Date().toISOString().split('T')[0]}`);
+    return res.send(csvContent);
+  }
+
+  res.json({
+    ok: true,
+    message: 'Transaction report retrieved successfully',
+    data: transactions
+  });
+});
+
+/**
+ * Get product analytics
+ * GET /api/user/analytics/products
+ */
+export const getProductAnalyticsController = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  
+  const productAnalytics = await getProductAnalytics(userId.toString());
+
+  res.json({
+    ok: true,
+    message: 'Product analytics retrieved successfully',
+    data: productAnalytics
+  });
+});
+
+/**
+ * Update user profile
+ * PUT /api/user/profile
+ */
+export const updateProfile = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { firstName, lastName, phone, aadharNumber } = req.body;
+
+  // Find user
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      ok: false,
+      message: 'User not found'
+    });
+  }
+
+  // Update fields
+  if (firstName) user.firstName = firstName;
+  if (lastName) user.lastName = lastName;
+  if (phone) user.phone = phone.replace(/\D/g, '');
+  if (aadharNumber) user.aadharNumber = aadharNumber.replace(/\D/g, '');
+
+  await user.save();
+
+  res.json({
+    ok: true,
+    message: 'Profile updated successfully',
+    data: user.toPublicJSON()
+  });
+});
+
+/**
+ * Update user profile picture
+ * PUT /api/user/profile/picture
+ */
+export const updateProfilePicture = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  
+  if (!req.file) {
+    return res.status(400).json({
+      ok: false,
+      message: 'Profile picture is required'
+    });
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      ok: false,
+      message: 'User not found'
+    });
+  }
+
   try {
-    const { id } = req.params;
+    // Upload new image to Cloudinary
+    const uploadResult = await uploadImageFromBuffer(
+      req.file.buffer,
+      'profile-pictures'
+    );
 
-    const user = await User.findById(id).select("-passwordHash").lean();
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
+    // Delete old profile picture if exists
+    if (user.profilePicture?.public_id) {
+      try {
+        await deleteImage(user.profilePicture.public_id);
+      } catch (error) {
+        console.error('Error deleting old profile picture:', error);
+      }
     }
 
-    res.json({
-      success: true,
-      data: user,
-      message: "User retrieved successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    // Update user profile picture
+    user.profilePicture = {
+      public_id: uploadResult.public_id,
+      url: uploadResult.url
+    };
 
-// Create new user
-export const createUser = async (req, res, next) => {
-  try {
-    const validation = validateRequest(req.body, [
-      "userId",
-      "name",
-      "email",
-      "phone",
-      "passwordHash",
-    ]);
-
-    if (!validation.isValid) {
-      return res.status(400).json({
-        success: false,
-        message: validation.message,
-      });
-    }
-
-    const user = new User(req.body);
     await user.save();
 
-    const userResponse = user.toObject();
-    delete userResponse.passwordHash;
-
-    res.status(201).json({
-      success: true,
-      data: userResponse,
-      message: "User created successfully",
-    });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "User with this email or userId already exists",
-      });
-    }
-    next(error);
-  }
-};
-
-// Update user
-export const updateUser = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const updateData = req.body;
-
-    const user = await User.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    }).select("-passwordHash");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
     res.json({
-      success: true,
-      data: user,
-      message: "User updated successfully",
+      ok: true,
+      message: 'Profile picture updated successfully',
+      data: {
+        profilePicture: user.profilePicture
+      }
     });
   } catch (error) {
-    next(error);
-  }
-};
-
-// Delete user
-export const deleteUser = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const user = await User.findByIdAndDelete(id);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "User deleted successfully",
+    console.error('Error updating profile picture:', error);
+    res.status(500).json({
+      ok: false,
+      message: 'Failed to update profile picture'
     });
-  } catch (error) {
-    next(error);
   }
-};
+});
 
-// Mark user as owner
-export const markAsOwner = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { isOwner, verificationStatus } = req.body;
+/**
+ * Change user password
+ * PUT /api/user/password
+ */
+export const changePassword = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-      id,
-      { isOwner, verificationStatus },
-      { new: true, runValidators: true }
-    ).select("-passwordHash");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      data: user,
-      message: "User owner status updated successfully",
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({
+      ok: false,
+      message: 'Current password and new password are required'
     });
-  } catch (error) {
-    next(error);
   }
-};
 
-// Get user stats
-export const getUserStats = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // Aggregate booking stats
-    const stats = await Booking.aggregate([
-      { $match: { userId: user._id } },
-      {
-        $group: {
-          _id: null,
-          totalBookings: { $sum: 1 },
-          totalSpent: { $sum: "$pricingSnapshot.totalPrice" },
-        },
-      },
-    ]);
-
-    const userStats = stats[0] || { totalBookings: 0, totalSpent: 0 };
-
-    // Update user stats
-    await User.findByIdAndUpdate(id, {
-      stats: {
-        totalBookings: userStats.totalBookings,
-        totalSpent: userStats.totalSpent,
-      },
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({
+      ok: false,
+      message: 'User not found'
     });
-
-    res.json({
-      success: true,
-      data: userStats,
-      message: "User stats retrieved successfully",
-    });
-  } catch (error) {
-    next(error);
   }
-};
+
+  // Verify current password
+  if (!user.comparePassword(currentPassword)) {
+    return res.status(400).json({
+      ok: false,
+      message: 'Current password is incorrect'
+    });
+  }
+
+  // Update password
+  user.password = newPassword;
+  await user.save();
+
+  res.json({
+    ok: true,
+    message: 'Password changed successfully'
+  });
+});
+
+/**
+ * Get user statistics
+ * GET /api/user/stats
+ */
+export const getUserStats = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  
+  const dashboardData = await getDashboardData(userId.toString());
+  
+  const stats = {
+    totalBookings: dashboardData.totalBookings,
+    totalAmountSpent: dashboardData.totalAmountSpent,
+    totalActiveRentals: dashboardData.totalActiveRentals,
+    lateReturnsCount: dashboardData.lateReturnsCount,
+    averageBookingValue: dashboardData.totalBookings > 0 
+      ? dashboardData.totalAmountSpent / dashboardData.totalBookings 
+      : 0,
+    mostRentedProduct: dashboardData.mostRentedProducts[0] || null
+  };
+
+  res.json({
+    ok: true,
+    message: 'User statistics retrieved successfully',
+    data: stats
+  });
+});
