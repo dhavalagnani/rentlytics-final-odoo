@@ -18,12 +18,19 @@
 }
 
 :root {
-  --shadow-soft: 0 10px 25px -10px rgb(2 132 199 / 0.25), 0 6px 12px -6px rgb(2 132 199 / 0.2);
+  --shadow-soft: 0 10px 25px -10px rgb(2 132 199 / 0.25),
+    0 6px 12px -6px rgb(2 132 199 / 0.2);
 }
 
-html, body, #root { height: 100%; }
+html,
+body,
+#root {
+  height: 100%;
+}
 
-body { font-family: Inter, Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif; }
+body {
+  font-family: Inter, Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif;
+}
 
 /* Smooth scrolling */
 html {
@@ -86,11 +93,21 @@ html {
   }
 }
 
-.animate-fadeInUp { animation: fadeInUp 0.6s ease-out; }
-.animate-fadeInLeft { animation: fadeInLeft 0.6s ease-out; }
-.animate-fadeInRight { animation: fadeInRight 0.6s ease-out; }
-.animate-scaleIn { animation: scaleIn 0.6s ease-out; }
-.animate-slideInUp { animation: slideInUp 0.6s ease-out; }
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out;
+}
+.animate-fadeInLeft {
+  animation: fadeInLeft 0.6s ease-out;
+}
+.animate-fadeInRight {
+  animation: fadeInRight 0.6s ease-out;
+}
+.animate-scaleIn {
+  animation: scaleIn 0.6s ease-out;
+}
+.animate-slideInUp {
+  animation: slideInUp 0.6s ease-out;
+}
 
 /* Hover animations */
 .hover-lift {
@@ -104,8 +121,12 @@ html {
 
 /* Loading animations */
 @keyframes shimmer {
-  0% { background-position: -200px 0; }
-  100% { background-position: calc(200px + 100%) 0; }
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
 }
 
 .shimmer {
@@ -116,45 +137,133 @@ html {
 
 /* Pulse animation */
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
-.animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 
 /* Bounce animation */
 @keyframes bounce {
-  0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
-  50% { transform: none; animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+  0%,
+  100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
 }
 
-.animate-bounce { animation: bounce 1s infinite; }
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
 
 /* Spin animation */
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.animate-spin { animation: spin 1s linear infinite; }
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Modal slide in animation */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modalSlideIn {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-20px) rotate(120deg);
+  }
+  66% {
+    transform: translateY(-10px) rotate(240deg);
+  }
+}
+
+.floating-element {
+  position: absolute;
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Scroll animation */
+.animate-on-scroll {
+  transition: all 0.8s ease-out;
+}
+
+.animate-on-scroll.animate-fadeInUp {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Card styling */
+.card {
+  background: rgba(17, 24, 39, 0.7);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
 
 .glass {
-  @apply bg-surface-elev/70 backdrop-blur-md border border-border/40 shadow-lg; 
+  @apply bg-surface-elev/70 backdrop-blur-md border border-border/40 shadow-lg;
 }
 
 .btn {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition-all;
 }
-.btn-primary { @apply bg-primary text-white hover:bg-[--color-primary-600] active:bg-[--color-primary-700] shadow; }
-.btn-outline { @apply border border-border text-white/90 hover:bg-white/5; }
-.btn-ghost { @apply text-white/80 hover:bg-white/5; }
+.btn-primary {
+  @apply bg-primary text-white hover:bg-[--color-primary-600] active:bg-[--color-primary-700] shadow;
+}
+.btn-outline {
+  @apply border border-border text-white/90 hover:bg-white/5;
+}
+.btn-ghost {
+  @apply text-white/80 hover:bg-white/5;
+}
 
-.card { @apply rounded-2xl bg-card/70 border border-border/50 shadow-lg; }
+.card {
+  @apply rounded-2xl bg-card/70 border border-border/50 shadow-lg;
+}
 
 .input {
   @apply w-full rounded-xl bg-surface-elev border border-border/60 px-3 py-2 text-white placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-primary/60;
 }
 
-.chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium bg-white/10 border border-white/10; }
+.chip {
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium bg-white/10 border border-white/10;
+}
 
-.grid-auto-fill { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.grid-auto-fill {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}

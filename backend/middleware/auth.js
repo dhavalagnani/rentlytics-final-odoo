@@ -1,45 +1,45 @@
-import { verifyToken } from '../utils/jwt.js';
-import User from '../models/User.js';
+import { verifyToken } from "../utils/jwt.js";
+import User from "../models/User.model.js";
 
 // Middleware to authenticate user
 export const authenticateUser = async (req, res, next) => {
   try {
     const token = req.cookies.token;
-    
+
     if (!token) {
       return res.status(401).json({
         ok: false,
-        message: 'Access denied. No token provided.'
+        message: "Access denied. No token provided.",
       });
     }
 
     // Verify token
     const decoded = verifyToken(token);
-    
+
     // Get user from database
-    const user = await User.findById(decoded.userId).select('-passwordHash');
-    
+    const user = await User.findById(decoded.userId).select("-passwordHash");
+
     if (!user) {
       return res.status(401).json({
         ok: false,
-        message: 'Invalid token. User not found.'
+        message: "Invalid token. User not found.",
       });
     }
 
     if (!user.isActive) {
       return res.status(401).json({
         ok: false,
-        message: 'Account not activated. Please verify your email.'
+        message: "Account not activated. Please verify your email.",
       });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    console.error('Auth middleware error:', error);
+    console.error("Auth middleware error:", error);
     return res.status(401).json({
       ok: false,
-      message: 'Invalid token.'
+      message: "Invalid token.",
     });
   }
 };
@@ -48,16 +48,16 @@ export const authenticateUser = async (req, res, next) => {
 export const optionalAuth = async (req, res, next) => {
   try {
     const token = req.cookies.token;
-    
+
     if (token) {
       const decoded = verifyToken(token);
-      const user = await User.findById(decoded.userId).select('-passwordHash');
-      
+      const user = await User.findById(decoded.userId).select("-passwordHash");
+
       if (user && user.isActive) {
         req.user = user;
       }
     }
-    
+
     next();
   } catch (error) {
     // Continue without authentication
