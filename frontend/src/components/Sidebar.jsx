@@ -1,6 +1,5 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import layoutService from '../services/layoutService'
 
 function Icon({ name, className = 'w-4 h-4' }) {
   const icons = {
@@ -19,7 +18,19 @@ function Icon({ name, className = 'w-4 h-4' }) {
 
 function Sidebar() {
   const location = useLocation()
-  const routes = layoutService.getRoutes()
+  
+  // Routes data
+  const routes = [
+    { path: '/dashboard', name: 'Dashboard', icon: 'dashboard' },
+    { path: '/catalog', name: 'Catalog', icon: 'catalog' },
+    { path: '/orders', name: 'Orders', icon: 'orders' },
+    { path: '/schedule', name: 'Schedule', icon: 'schedule' },
+    { path: '/pricing', name: 'Pricing', icon: 'pricing' },
+    { path: '/notifications', name: 'Notifications', icon: 'notifications' },
+    { path: '/returns', name: 'Returns', icon: 'returns' },
+    { path: '/reports', name: 'Reports', icon: 'reports' },
+    { path: '/customer-portal', name: 'Customer Portal', icon: 'customers' },
+  ]
 
   return (
     <aside className="w-64 bg-surface-elev border-r border-border/60 h-screen sticky top-16 flex-shrink-0">

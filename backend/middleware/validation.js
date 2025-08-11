@@ -94,17 +94,3 @@ export const validateLogin = [
   
   handleValidationErrors
 ];
-
-// OTP validation rules
-export const validateOtp = [
-  body('otpId')
-    .notEmpty()
-    .withMessage('OTP ID is required'),
-  
-  body('otp')
-    .trim()
-    .matches(/^[0-9]{6}$/)
-    .withMessage('Please provide a valid 6-digit OTP'),
-  
-  handleValidationErrors
-];

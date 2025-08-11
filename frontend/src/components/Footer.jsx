@@ -1,12 +1,55 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import layoutService from '../services/layoutService'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
-  const footerLinks = layoutService.getFooterLinks()
-  const socialLinks = layoutService.getSocialLinks()
-  const stats = layoutService.getStats()
+  
+  // Footer links data
+  const footerLinks = {
+    product: [
+      { name: 'Equipment Catalog', href: '/catalog' },
+      { name: 'Pricing Plans', href: '/pricing' },
+      { name: 'How It Works', href: '/how-it-works' },
+      { name: 'Equipment Categories', href: '/categories' },
+      { name: 'New Arrivals', href: '/new-arrivals' }
+    ],
+    company: [
+      { name: 'About Us', href: '/about' },
+      { name: 'Our Story', href: '/story' },
+      { name: 'Careers', href: '/careers' },
+      { name: 'Press & Media', href: '/press' },
+      { name: 'Partnerships', href: '/partnerships' }
+    ],
+    support: [
+      { name: 'Help Center', href: '/help' },
+      { name: 'Contact Support', href: '/contact' },
+      { name: 'Safety Guidelines', href: '/safety' },
+      { name: 'Terms of Service', href: '/terms' },
+      { name: 'Privacy Policy', href: '/privacy' }
+    ],
+    resources: [
+      { name: 'Blog', href: '/blog' },
+      { name: 'Equipment Guides', href: '/guides' },
+      { name: 'Video Tutorials', href: '/tutorials' },
+      { name: 'FAQ', href: '/faq' },
+      { name: 'Community Forum', href: '/forum' }
+    ]
+  }
+
+  const socialLinks = [
+    { name: 'Facebook', icon: '📘', href: '#' },
+    { name: 'Twitter', icon: '🐦', href: '#' },
+    { name: 'Instagram', icon: '📷', href: '#' },
+    { name: 'LinkedIn', icon: '💼', href: '#' },
+    { name: 'YouTube', icon: '📺', href: '#' }
+  ]
+
+  const stats = [
+    { value: '10K+', label: 'Happy Customers' },
+    { value: '500+', label: 'Equipment Items' },
+    { value: '50+', label: 'Cities Served' },
+    { value: '99%', label: 'Satisfaction Rate' }
+  ]
 
   return (
     <footer className="bg-surface-elev border-t border-border/40 mt-auto w-full">

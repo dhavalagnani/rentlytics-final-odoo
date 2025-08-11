@@ -46,12 +46,6 @@ export const authAPI = {
     return response.data
   },
 
-  // Validate OTP
-  validateOtp: async (otpData) => {
-    const response = await api.post('/api/auth/validate-otp', otpData)
-    return response.data
-  },
-
   // Login user
   login: async (credentials) => {
     const response = await api.post('/api/auth/login', credentials)

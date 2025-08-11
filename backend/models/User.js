@@ -2,6 +2,17 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: [true, 'User ID is required'],
+    unique: true,
+    default: function() {
+      // Generate a unique user ID with prefix and timestamp
+      const timestamp = Date.now().toString(36);
+      const random = Math.random().toString(36).substr(2, 5);
+      return `USER_${timestamp}_${random}`.toUpperCase();
+    }
+  },
   firstName: {
     type: String,
     required: [true, 'First name is required'],
@@ -40,14 +51,25 @@ const userSchema = new mongoose.Schema({
   },
   isActive: {
     type: Boolean,
-    default: false
+    default: true
   }
 }, {
   timestamps: true
 });
 
-// Index for email queries
+// Indexes
 userSchema.index({ email: 1 });
+userSchema.index({ userId: 1 });
+
+// Pre-save middleware to ensure userId is set
+userSchema.pre('save', function(next) {
+  if (!this.userId) {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substr(2, 5);
+    this.userId = `USER_${timestamp}_${random}`.toUpperCase();
+  }
+  next();
+});
 
 // Virtual for password (not stored in DB)
 userSchema.virtual('password')
@@ -67,6 +89,7 @@ userSchema.methods.comparePassword = function(candidatePassword) {
 userSchema.methods.toPublicJSON = function() {
   return {
     id: this._id,
+    userId: this.userId,
     firstName: this.firstName,
     lastName: this.lastName,
     email: this.email,

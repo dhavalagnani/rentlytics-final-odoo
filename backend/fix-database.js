@@ -46,27 +46,12 @@ const fixDatabase = async () => {
       await db.collection('users').createIndex({ email: 1 }, { unique: true });
       console.log('✅ Created email index');
       
+      await db.collection('users').createIndex({ userId: 1 }, { unique: true });
+      console.log('✅ Created userId index');
+      
       // List current indexes
       const indexes = await db.collection('users').indexes();
       console.log('📊 Current indexes on users collection:', indexes);
-    }
-    
-    // Fix otps collection
-    if (collections.some(c => c.name === 'otps')) {
-      console.log('📋 Fixing otps collection...');
-      
-      // Drop all indexes except _id
-      await db.collection('otps').dropIndexes();
-      console.log('✅ Dropped all indexes from otps collection');
-      
-      // Create correct indexes
-      await db.collection('otps').createIndex({ userId: 1, isUsed: 1 });
-      await db.collection('otps').createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-      console.log('✅ Created otps indexes');
-      
-      // List current indexes
-      const indexes = await db.collection('otps').indexes();
-      console.log('📊 Current indexes on otps collection:', indexes);
     }
     
     console.log('🎉 Database indexes fixed successfully!');
@@ -79,19 +64,33 @@ const fixDatabase = async () => {
 const cleanupData = async () => {
   try {
     console.log('🧹 Cleaning up invalid data...');
-    
     const db = mongoose.connection.db;
     
-    // Remove any documents with null userId in users collection
-    const result = await db.collection('users').deleteMany({ userId: { $exists: true } });
+    // Remove any documents with null or missing userId in users collection
+    const result = await db.collection('users').deleteMany({
+      $or: [
+        { userId: null },
+        { userId: { $exists: false } },
+        { userId: "" }
+      ]
+    });
     console.log(`🗑️ Removed ${result.deletedCount} invalid user documents`);
-    
-    // Remove any documents with null userId in otps collection
-    const otpResult = await db.collection('otps').deleteMany({ userId: null });
-    console.log(`🗑️ Removed ${otpResult.deletedCount} invalid OTP documents`);
-    
+
+    // Activate any inactive users (since we removed OTP verification)
+    const activateResult = await db.collection('users').updateMany(
+      { isActive: false },
+      { $set: { isActive: true } }
+    );
+    console.log(`✅ Activated ${activateResult.modifiedCount} inactive users`);
+
+    // Remove otps collection entirely since we're not using OTP anymore
+    const collections = await db.listCollections().toArray();
+    if (collections.some(c => c.name === 'otps')) {
+      await db.collection('otps').drop();
+      console.log('🗑️ Dropped otps collection');
+    }
+
     console.log('✅ Data cleanup completed!');
-    
   } catch (error) {
     console.error('❌ Error cleaning up data:', error);
   }

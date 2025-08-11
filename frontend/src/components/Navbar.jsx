@@ -1,37 +1,44 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import layoutService from '../services/layoutService'
 
-export default function Navbar({ onLoginClick, user }) {
+export default function Navbar({ onLoginClick, user, onLogout }) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrolled = layoutService.handleScroll()
+      const scrolled = window.scrollY > 20
       setIsScrolled(scrolled)
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const notifications = layoutService.getNotifications()
+  // Load notifications (temporarily empty)
+  useEffect(() => {
+    setNotifications([])
+  }, [])
 
   const handleSearchToggle = () => {
-    const isOpen = layoutService.toggleSearch()
-    setIsSearchOpen(isOpen)
+    setIsSearchOpen(!isSearchOpen)
   }
 
   const handleNotificationsToggle = () => {
-    const isOpen = layoutService.toggleNotifications()
-    setIsNotificationsOpen(isOpen)
+    setIsNotificationsOpen(!isNotificationsOpen)
   }
 
   const handleUserMenuToggle = () => {
-    const isOpen = layoutService.toggleUserMenu()
-    setIsUserMenuOpen(isOpen)
+    setIsUserMenuOpen(!isUserMenuOpen)
+  }
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout()
+    }
+    setIsUserMenuOpen(false)
   }
 
   return (
@@ -172,7 +179,7 @@ export default function Navbar({ onLoginClick, user }) {
                         Settings
                       </Link>
                       <button
-                        onClick={() => layoutService.logout()}
+                        onClick={handleLogout}
                         className="w-full text-left px-2 py-1.5 text-xs text-white/80 hover:text-white hover:bg-white/10 rounded transition-colors"
                       >
                         Sign out

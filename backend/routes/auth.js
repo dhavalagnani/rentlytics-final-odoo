@@ -1,32 +1,25 @@
 import express from 'express';
 import {
   signup,
-  validateOtp,
   login,
   getCurrentUser,
   logout
 } from '../controllers/authController.js';
 import {
   validateSignup,
-  validateLogin,
-  validateOtp as validateOtpMiddleware
+  validateLogin
 } from '../middleware/validation.js';
 import {
   signupRateLimiter,
-  loginRateLimiter,
-  otpRateLimiter
+  loginRateLimiter
 } from '../middleware/rateLimit.js';
 import { authenticateUser } from '../middleware/auth.js';
 import User from '../models/User.js';
-import Otp from '../models/Otp.js';
 
 const router = express.Router();
 
 // Signup route
 router.post('/signup', signupRateLimiter, validateSignup, signup);
-
-// OTP validation route
-router.post('/validate-otp', otpRateLimiter, validateOtpMiddleware, validateOtp);
 
 // Login route
 router.post('/login', loginRateLimiter, validateLogin, login);
@@ -58,7 +51,7 @@ router.post('/test-signup', signupRateLimiter, validateSignup, async (req, res) 
       });
     }
 
-    // Create new user (inactive)
+    // Create new user (active immediately)
     const user = new User({
       firstName,
       lastName,
@@ -66,27 +59,21 @@ router.post('/test-signup', signupRateLimiter, validateSignup, async (req, res) 
       phone: cleanPhone,
       password,
       aadharNumber: cleanAadharNumber,
-      isActive: false
+      isActive: true
     });
 
     await user.save();
     console.log('User saved successfully:', user._id);
 
-    // Generate OTP (but don't send email)
-    const otp = Otp.generateOtp();
-    const otpDoc = Otp.createOtp(user._id, otp);
-    await otpDoc.save();
-
     console.log('=== TEST SIGNUP SUCCESS ===');
-    console.log('OTP for testing:', otp);
-    console.log('OTP ID:', otpDoc._id);
+    console.log('User created:', user.firstName, user.lastName);
 
     res.status(201).json({
       ok: true,
-      message: 'Test signup successful - OTP logged in console',
-      otpId: otpDoc._id,
-      testOtp: otp, // Only for testing!
-      userId: user._id
+      message: 'Test signup successful',
+      userId: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName
     });
 
   } catch (error) {
