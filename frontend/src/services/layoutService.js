@@ -6,7 +6,7 @@ class LayoutService {
     try {
       // Temporarily return empty array until backend route is created
       return [];
-      // const response = await api.get('/api/navigation');
+      // const response = await api.get('/navigation');
       // return response.data.menu || [];
     } catch (error) {
       console.error('Error fetching navigation:', error);
@@ -30,7 +30,7 @@ class LayoutService {
     try {
       // Temporarily return empty array until backend route is created
       return [];
-      // const response = await api.get('/api/notifications');
+      // const response = await api.get('/notifications');
       // return response.data.notifications || [];
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -43,7 +43,7 @@ class LayoutService {
     try {
       // Temporarily return success until backend route is created
       return { ok: true };
-      // const response = await api.put(`/api/notifications/${notificationId}/read`);
+      // const response = await api.put(`/notifications/${notificationId}/read`);
       // return response.data;
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -56,7 +56,7 @@ class LayoutService {
     try {
       // Temporarily return empty object until backend route is created
       return {};
-      // const response = await api.get('/api/dashboard/stats');
+      // const response = await api.get('/dashboard/stats');
       // return response.data;
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -69,7 +69,7 @@ class LayoutService {
     try {
       // Temporarily return empty array until backend route is created
       return [];
-      // const response = await api.get('/api/activity/recent');
+      // const response = await api.get('/activity/recent');
       // return response.data.activities || [];
     } catch (error) {
       console.error('Error fetching recent activity:', error);
@@ -82,7 +82,7 @@ class LayoutService {
     try {
       // Temporarily return success until backend route is created
       return { ok: true };
-      // const response = await api.put('/api/user/preferences', preferences);
+      // const response = await api.put('/user/preferences', preferences);
       // return response.data;
     } catch (error) {
       console.error('Error updating user preferences:', error);
@@ -95,7 +95,7 @@ class LayoutService {
     try {
       // Temporarily return empty object until backend route is created
       return {};
-      // const response = await api.get('/api/user/preferences');
+      // const response = await api.get('/user/preferences');
       // return response.data.preferences || {};
     } catch (error) {
       console.error('Error fetching user preferences:', error);

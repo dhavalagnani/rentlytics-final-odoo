@@ -103,17 +103,8 @@ function Catalog() {
   }
 
   const handleRentProduct = async (product) => {
-    try {
-      const isAvailable = await productService.checkAvailability(product.id)
-      if (isAvailable) {
-        alert(`Renting ${product.name}`)
-        // In a real app, this would navigate to a rental form
-      } else {
-        alert(`${product.name} is not available for the selected dates`)
-      }
-    } catch (error) {
-      console.error('Error checking availability:', error)
-    }
+    // Navigate to product details page for rental
+    navigate(`/product-details/${product._id}`)
   }
 
   const [categories, setCategories] = useState([])

@@ -7,10 +7,18 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const api = axios.create({
   baseURL: "/api", // Use relative path since Vite proxy handles the full URL
   withCredentials: true,
-  timeout: 10000,
+  timeout: 15000, // Increased timeout for payment operations
   headers: {
     "Content-Type": "application/json",
   },
+});
+
+// Log API configuration for debugging
+console.log('🔧 API Service Configuration:', {
+  baseURL: api.defaults.baseURL,
+  withCredentials: api.defaults.withCredentials,
+  timeout: api.defaults.timeout,
+  VITE_API_URL: import.meta.env.VITE_API_URL
 });
 
 // Request interceptor for logging

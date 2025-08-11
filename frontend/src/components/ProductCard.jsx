@@ -8,15 +8,29 @@ export default function ProductCard({ product, onView, onRent }) {
   const getPricingText = () => {
     if (product.baseRates) {
       const rates = product.baseRates;
-      if (rates.hourly && rates.hourly > 0) {
-        return `₹${rates.hourly}/hour`;
-      } else if (rates.daily && rates.daily > 0) {
+      // Show daily rate as primary pricing
+      if (rates.daily && rates.daily > 0) {
         return `₹${rates.daily}/day`;
+      } else if (rates.hourly && rates.hourly > 0) {
+        return `₹${rates.hourly}/hour`;
       } else if (rates.weekly && rates.weekly > 0) {
         return `₹${rates.weekly}/week`;
       }
     }
     return 'Price on request';
+  };
+
+  // Get detailed pricing for debugging
+  const getDetailedPricing = () => {
+    if (product.baseRates) {
+      const rates = product.baseRates;
+      return {
+        hourly: rates.hourly || 0,
+        daily: rates.daily || 0,
+        weekly: rates.weekly || 0
+      };
+    }
+    return { hourly: 0, daily: 0, weekly: 0 };
   };
 
   // Check if product is available
@@ -75,7 +89,7 @@ export default function ProductCard({ product, onView, onRent }) {
         <div className="flex items-center justify-between">
           <div className="text-sm text-ink-muted">
             <div className="font-medium text-primary-300">{getPricingText()}</div>
-            <div className="text-xs">Units: {product.unitsAvailable}</div>
+            <div className="text-xs">Units: {product.unitsAvailable || 0}</div>
           </div>
         </div>
         

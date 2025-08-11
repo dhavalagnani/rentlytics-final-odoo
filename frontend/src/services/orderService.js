@@ -7,7 +7,7 @@ class OrderService {
     try {
       // Temporarily return empty array until backend route is created
       return [];
-      // const response = await api.get('/api/orders');
+      // const response = await api.get('/orders');
       // return response.data.orders || [];
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -20,7 +20,7 @@ class OrderService {
     try {
       // Temporarily return empty array until backend route is created
       return [];
-      // const response = await api.get(`/api/orders/user/${userId}`);
+      // const response = await api.get(`/orders/user/${userId}`);
       // return response.data.orders || [];
     } catch (error) {
       console.error('Error fetching user orders:', error);
@@ -33,7 +33,7 @@ class OrderService {
     try {
       // Temporarily return null until backend route is created
       return null;
-      // const response = await api.get(`/api/orders/${id}`);
+      // const response = await api.get(`/orders/${id}`);
       // return response.data.order;
     } catch (error) {
       console.error('Error fetching order:', error);
@@ -46,7 +46,7 @@ class OrderService {
     try {
       // Temporarily return success until backend route is created
       return { ok: true };
-      // const response = await api.post('/api/orders', orderData);
+      // const response = await api.post('/orders', orderData);
       // return response.data;
     } catch (error) {
       console.error('Error creating order:', error);
@@ -59,7 +59,7 @@ class OrderService {
     try {
       // Temporarily return success until backend route is created
       return { ok: true };
-      // const response = await api.put(`/api/orders/${id}`, orderData);
+      // const response = await api.put(`/orders/${id}`, orderData);
       // return response.data;
     } catch (error) {
       console.error('Error updating order:', error);
@@ -72,7 +72,7 @@ class OrderService {
     try {
       // Temporarily return success until backend route is created
       return { ok: true };
-      // const response = await api.post(`/api/orders/${id}/cancel`);
+      // const response = await api.post(`/orders/${id}/cancel`);
       // return response.data;
     } catch (error) {
       console.error('Error canceling order:', error);
@@ -85,7 +85,7 @@ class OrderService {
     try {
       // Temporarily return empty object until backend route is created
       return {};
-      // const response = await api.get('/api/orders/stats');
+      // const response = await api.get('/orders/stats');
       // return response.data;
     } catch (error) {
       console.error('Error fetching order stats:', error);

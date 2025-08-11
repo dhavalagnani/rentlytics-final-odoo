@@ -12,6 +12,7 @@ import orderRoutes from "./routes/orders.route.js";
 import transactionRoutes from "./routes/transactions.route.js";
 import pricelistRoutes from "./routes/pricelists.route.js";
 import priceRuleRoutes from "./routes/pricerules.route.js";
+import paymentRoutes from "./routes/payment.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 // Load environment variables
@@ -36,7 +37,10 @@ const corsOptions = {
         ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  exposedHeaders: ["Set-Cookie"],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 // Middleware
@@ -138,6 +142,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/pricelists", pricelistRoutes);
 app.use("/api/pricerules", priceRuleRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Centralized error handling middleware
 app.use(errorHandler);

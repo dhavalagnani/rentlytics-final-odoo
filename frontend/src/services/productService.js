@@ -88,7 +88,7 @@ class ProductService {
     try {
       // Temporarily return success until backend route is created
       return { ok: true };
-      // const response = await api.post('/api/products', productData);
+      // const response = await api.post('/products', productData);
       // return response.data;
     } catch (error) {
       console.error('Error creating product:', error);
@@ -101,7 +101,7 @@ class ProductService {
     try {
       // Temporarily return success until backend route is created
       return { ok: true };
-      // const response = await api.put(`/api/products/${id}`, productData);
+      // const response = await api.put(`/products/${id}`, productData);
       // return response.data;
     } catch (error) {
       console.error('Error updating product:', error);
@@ -114,7 +114,7 @@ class ProductService {
     try {
       // Temporarily return success until backend route is created
       return { ok: true };
-      // const response = await api.delete(`/api/products/${id}`);
+      // const response = await api.delete(`/products/${id}`);
       // return response.data;
     } catch (error) {
       console.error('Error deleting product:', error);

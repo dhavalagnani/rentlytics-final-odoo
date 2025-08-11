@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import productService from '../services/productService'
+import paymentService from '../services/paymentService'
+import { authAPI } from '../services/apiService'
+import { toast } from 'react-toastify'
+import AuthDebug from '../components/AuthDebug'
 
 export default function ProductDetails() {
   const { id } = useParams()
@@ -8,8 +12,10 @@ export default function ProductDetails() {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [selectedDates, setSelectedDates] = useState({ start: '', end: '' })
   const [quantity, setQuantity] = useState(1)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [rentalType, setRentalType] = useState('daily') // 'hourly', 'daily', 'weekly'
+  const [rentalDuration, setRentalDuration] = useState(1)
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -59,11 +65,114 @@ export default function ProductDetails() {
   }
 
   const calculateTotal = () => {
-    if (!selectedDates.start || !selectedDates.end) return 0
-    const start = new Date(selectedDates.start)
-    const end = new Date(selectedDates.end)
-    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24))
-    return days * (product.baseRates?.daily || 0) * quantity
+    if (!rentalDuration || rentalDuration <= 0) return 0
+    
+    let rate = 0
+    switch (rentalType) {
+      case 'hourly':
+        rate = product.baseRates?.hourly || 0
+        break
+      case 'daily':
+        rate = product.baseRates?.daily || 0
+        break
+      case 'weekly':
+        rate = product.baseRates?.weekly || 0
+        break
+      default:
+        rate = product.baseRates?.daily || 0
+    }
+    
+    const rentalAmount = rentalDuration * rate * quantity
+    const depositAmount = (product.depositAmount || 0) * quantity
+    return rentalAmount + depositAmount
+  }
+
+  const calculateRentalAmount = () => {
+    if (!rentalDuration || rentalDuration <= 0) return 0
+    
+    let rate = 0
+    switch (rentalType) {
+      case 'hourly':
+        rate = product.baseRates?.hourly || 0
+        break
+      case 'daily':
+        rate = product.baseRates?.daily || 0
+        break
+      case 'weekly':
+        rate = product.baseRates?.weekly || 0
+        break
+      default:
+        rate = product.baseRates?.daily || 0
+    }
+    
+    return rentalDuration * rate * quantity
+  }
+
+  const calculateDepositAmount = () => {
+    return (product.depositAmount || 0) * quantity
+  }
+
+  const handleRentNow = async () => {
+    try {
+      // Validate inputs
+      if (!rentalDuration || rentalDuration <= 0) {
+        toast.error('Please enter rental duration');
+        return;
+      }
+
+      if (product.unitsAvailable < quantity) {
+        toast.error('Insufficient units available');
+        return;
+      }
+
+      // Check authentication
+      try {
+        await authAPI.getCurrentUser();
+      } catch (authError) {
+        toast.error('Please login to continue with payment');
+        return;
+      }
+
+      setIsProcessingPayment(true);
+      
+      // Calculate dates based on rental duration
+      const today = new Date();
+      const endDate = new Date(today);
+      
+      if (rentalType === 'hourly') {
+        endDate.setHours(endDate.getHours() + rentalDuration);
+      } else if (rentalType === 'daily') {
+        endDate.setDate(endDate.getDate() + rentalDuration);
+      } else if (rentalType === 'weekly') {
+        endDate.setDate(endDate.getDate() + (rentalDuration * 7));
+      }
+      
+      const orderData = {
+        productId: product._id,
+        startDate: today.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        unitCount: quantity,
+        rentalType: rentalType,
+        rentalDuration: rentalDuration,
+        totalAmount: calculateTotal(),
+        rentalAmount: calculateRentalAmount(),
+        depositAmount: calculateDepositAmount()
+      };
+
+      console.log('📋 Processing payment with data:', orderData);
+
+      const result = await paymentService.initializeRazorpayPayment(orderData);
+      
+      if (result.success) {
+        toast.success('Payment successful! Your booking has been confirmed.');
+        navigate('/orders');
+      }
+    } catch (error) {
+      console.error('❌ Payment error:', error);
+      toast.error(error.message || 'Payment failed. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
   }
 
   // Get the first image for display
@@ -71,6 +180,9 @@ export default function ProductDetails() {
 
   return (
     <div className="space-y-6">
+      {/* Temporary Auth Debug Component */}
+      <AuthDebug />
+      
       <div className="flex items-center gap-4">
         <button 
           onClick={() => navigate('/catalog')}
@@ -181,63 +293,75 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          <div className="card p-6">
-            <h3 className="text-white font-semibold text-lg mb-4">Book This Item</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm text-ink-muted mb-2 block">Start Date</label>
-                <input 
-                  type="date" 
-                  className="input"
-                  value={selectedDates.start}
-                  onChange={(e) => setSelectedDates(prev => ({ ...prev, start: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="text-sm text-ink-muted mb-2 block">End Date</label>
-                <input 
-                  type="date" 
-                  className="input"
-                  value={selectedDates.end}
-                  onChange={(e) => setSelectedDates(prev => ({ ...prev, end: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="text-sm text-ink-muted mb-2 block">Quantity</label>
-                <select 
-                  className="input"
-                  value={quantity}
-                  onChange={(e) => setQuantity(parseInt(e.target.value))}
-                >
-                  {Array.from({ length: Math.min(product.unitsAvailable, 5) }, (_, i) => i + 1).map(num => (
-                    <option key={num} value={num}>{num}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="border-t border-border/30 pt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-white/80">Subtotal</span>
-                  <span className="text-white">₹{calculateTotal()}</span>
-                </div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-white/80">Deposit (20%)</span>
-                  <span className="text-white">₹{Math.round(calculateTotal() * 0.2)}</span>
-                </div>
-                <div className="flex items-center justify-between text-lg font-semibold">
-                  <span className="text-white">Total</span>
-                  <span className="text-primary">₹{calculateTotal()}</span>
-                </div>
-              </div>
+                     <div className="card p-6">
+             <h3 className="text-white font-semibold text-lg mb-4">Book This Item</h3>
+             <div className="space-y-4">
+               <div>
+                 <label className="text-sm text-ink-muted mb-2 block">Quantity</label>
+                 <select 
+                   className="input"
+                   value={quantity}
+                   onChange={(e) => setQuantity(parseInt(e.target.value))}
+                 >
+                   {Array.from({ length: Math.min(product.unitsAvailable, 5) }, (_, i) => i + 1).map(num => (
+                     <option key={num} value={num}>{num}</option>
+                   ))}
+                 </select>
+               </div>
+               
+               {/* Rental Type Selection */}
+               <div>
+                 <label className="text-sm text-ink-muted mb-2 block">Rental Type</label>
+                 <select 
+                   className="input"
+                   value={rentalType}
+                   onChange={(e) => setRentalType(e.target.value)}
+                 >
+                   <option value="hourly">Hourly</option>
+                   <option value="daily">Daily</option>
+                   <option value="weekly">Weekly</option>
+                 </select>
+               </div>
+               
+               {/* Rental Duration */}
+               <div>
+                 <label className="text-sm text-ink-muted mb-2 block">
+                   Duration ({rentalType === 'hourly' ? 'Hours' : rentalType === 'daily' ? 'Days' : 'Weeks'})
+                 </label>
+                 <input 
+                   type="number" 
+                   min="1"
+                   className="input"
+                   value={rentalDuration}
+                   onChange={(e) => setRentalDuration(parseInt(e.target.value) || 1)}
+                 />
+               </div>
+               
+               <div className="border-t border-border/30 pt-4">
+                 <div className="flex items-center justify-between mb-2">
+                   <span className="text-white/80">Rental Amount</span>
+                   <span className="text-white">₹{calculateRentalAmount()}</span>
+                 </div>
+                 <div className="flex items-center justify-between mb-2">
+                   <span className="text-white/80">Deposit Amount</span>
+                   <span className="text-white">₹{calculateDepositAmount()}</span>
+                 </div>
+                 <div className="flex items-center justify-between text-lg font-semibold">
+                   <span className="text-white">Total</span>
+                   <span className="text-primary">₹{calculateTotal()}</span>
+                 </div>
+               </div>
 
-              <button 
-                className="btn btn-primary w-full" 
-                disabled={!selectedDates.start || !selectedDates.end || product.unitsAvailable === 0}
-              >
-                {product.unitsAvailable === 0 ? 'Not Available' : 'Rent Now'}
-              </button>
-            </div>
-          </div>
+               <button 
+                 className="btn btn-primary w-full" 
+                 disabled={!rentalDuration || product.unitsAvailable === 0 || isProcessingPayment}
+                 onClick={handleRentNow}
+               >
+                 {isProcessingPayment ? 'Processing Payment...' : 
+                  product.unitsAvailable === 0 ? 'Not Available' : 'Rent Now'}
+               </button>
+             </div>
+           </div>
         </div>
       </div>
 

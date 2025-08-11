@@ -19,6 +19,7 @@ const pricingSnapshotSchema = new mongoose.Schema(
     appliedRules: [appliedRuleSchema],
     discountAmount: { type: Number, default: 0 },
     lateFee: { type: Number, default: 0 },
+    rentalAmount: { type: Number, required: true },
     deposit: { type: Number, required: true },
     totalPrice: { type: Number, required: true },
   },
@@ -43,6 +44,12 @@ const bookingSchema = new mongoose.Schema(
     endDate: { type: Date, required: true },
     durationHours: { type: Number, required: true },
     durationDays: { type: Number, required: true },
+    rentalType: { 
+      type: String, 
+      enum: ['hourly', 'daily', 'weekly'], 
+      default: 'daily' 
+    },
+    rentalDuration: { type: Number, required: true, default: 1 },
     status: {
       type: String,
       enum: [
