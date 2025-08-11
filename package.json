@@ -1,0 +1,33 @@
+{
+  "name": "ev-management",
+  "version": "1.0.0",
+  "description": "Electric Vehicle Rental Management System",
+  "main": "index.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "server": "cd backend && npm run server",
+    "client": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install-all": "cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ev",
+    "electric-vehicle",
+    "rental",
+    "management",
+    "mern",
+    "react",
+    "nodejs"
+  ],
+  "author": "EV Management Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+} 
