@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Utility function to sanitize props and remove non-DOM attributes
 const sanitizeProps = (props) => {
-  const { jsx, ...domProps } = props;
+  const { jsx, user, ...domProps } = props;
   return domProps;
 };
 
-export default function AnimatedHero({ ...props }) {
+export default function AnimatedHero({ user, ...props }) {
+  const navigate = useNavigate();
   const heroRef = useRef(null);
 
   useEffect(() => {
@@ -98,28 +100,63 @@ export default function AnimatedHero({ ...props }) {
           style={{ animationDelay: "0.4s" }}
         >
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-8">
-            <button className="group relative px-6 py-3 bg-primary text-white rounded-lg font-semibold text-base hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-              <span className="relative z-10">Get Started Free</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </button>
-            <button className="group px-6 py-3 border-2 border-white/20 text-white rounded-lg font-semibold text-base hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
-              <span className="flex items-center space-x-2">
-                <span>Watch Demo</span>
-                <svg
-                  className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </span>
-            </button>
+            {user ? (
+              // User is authenticated - show Dashboard button
+              <button 
+                onClick={() => navigate('/dashboard')}
+                className="group relative px-8 py-4 bg-primary text-white rounded-lg font-semibold text-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                <span className="relative z-10 flex items-center space-x-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"
+                    />
+                  </svg>
+                  <span>Go to Dashboard</span>
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </button>
+            ) : (
+              // User is not authenticated - show original buttons
+              <>
+                <button className="group relative px-6 py-3 bg-primary text-white rounded-lg font-semibold text-base hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                  <span className="relative z-10">Get Started Free</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </button>
+                <button className="group px-6 py-3 border-2 border-white/20 text-white rounded-lg font-semibold text-base hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
+                  <span className="flex items-center space-x-2">
+                    <span>Watch Demo</span>
+                    <svg
+                      className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </span>
+                </button>
+              </>
+            )}
           </div>
         </div>
 

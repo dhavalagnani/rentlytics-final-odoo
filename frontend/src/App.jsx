@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css'
 
 // Layout Components
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
 
 // Page Components
 import Dashboard from './pages/Dashboard'
@@ -19,12 +20,13 @@ import CustomerPortal from './pages/CustomerPortal'
 import ProductDetails from './pages/ProductDetails'
 import AddProduct from './pages/AddProduct'
 import AnimatedHero from './components/AnimatedHero'
+import LoginPage from './pages/LoginPage'
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Landing page without sidebar */}
+        {/* Public routes - accessible without authentication */}
         <Route 
           path="/" 
           element={
@@ -34,18 +36,65 @@ function App() {
           } 
         />
         
-        {/* Dashboard pages with sidebar */}
-        <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-        <Route path="/catalog" element={<Layout><Catalog /></Layout>} />
-        <Route path="/orders" element={<Layout><Orders /></Layout>} />
-        <Route path="/schedule" element={<Layout><Schedule /></Layout>} />
-        <Route path="/pricing" element={<Layout><Pricing /></Layout>} />
-        <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
-        <Route path="/returns" element={<Layout><Returns /></Layout>} />
-        <Route path="/reports" element={<Layout><Reports /></Layout>} />
-        <Route path="/customer-portal" element={<Layout><CustomerPortal /></Layout>} />
-        <Route path="/product-details" element={<Layout><ProductDetails /></Layout>} />
-        <Route path="/add-product" element={<Layout><AddProduct /></Layout>} />
+        {/* Login page - accessible without authentication */}
+        <Route path="/login" element={<LoginPage />} />
+        
+        {/* Protected routes - require authentication */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Layout><Dashboard /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/catalog" element={
+          <ProtectedRoute>
+            <Layout><Catalog /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/orders" element={
+          <ProtectedRoute>
+            <Layout><Orders /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/schedule" element={
+          <ProtectedRoute>
+            <Layout><Schedule /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/pricing" element={
+          <ProtectedRoute>
+            <Layout><Pricing /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <Layout><Notifications /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/returns" element={
+          <ProtectedRoute>
+            <Layout><Returns /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/reports" element={
+          <ProtectedRoute>
+            <Layout><Reports /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/customer-portal" element={
+          <ProtectedRoute>
+            <Layout><CustomerPortal /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/product-details" element={
+          <ProtectedRoute>
+            <Layout><ProductDetails /></Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/add-product" element={
+          <ProtectedRoute>
+            <Layout><AddProduct /></Layout>
+          </ProtectedRoute>
+        } />
       </Routes>
       
       {/* Toast notifications */}

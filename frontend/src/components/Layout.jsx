@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
-import AuthModal from "./AuthModal";
 import { authAPI } from "../services/apiService";
 
 // Utility function to sanitize props and remove non-DOM attributes
@@ -12,7 +11,6 @@ const sanitizeProps = (props) => {
 };
 
 function Layout({ children, showSidebar = true, showFooter = true, ...props }) {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -36,18 +34,7 @@ function Layout({ children, showSidebar = true, showFooter = true, ...props }) {
     }
   };
 
-  const handleAuthModalOpen = () => {
-    setIsAuthModalOpen(true);
-  };
 
-  const handleAuthModalClose = () => {
-    setIsAuthModalOpen(false);
-  };
-
-  const handleLogin = (userData) => {
-    setUser(userData);
-    setIsAuthModalOpen(false);
-  };
 
   const handleLogout = async () => {
     try {
@@ -63,11 +50,10 @@ function Layout({ children, showSidebar = true, showFooter = true, ...props }) {
   // Sanitize props to remove any jsx attributes
   const sanitizedProps = sanitizeProps(props);
   return (
-    <div className={`${showSidebar ? 'h-screen overflow-hidden' : 'min-h-screen'} flex flex-col bg-surface`} {...sanitizedProps}>
+    <div className={`${showSidebar ? 'h-screen overflow-hidden' : showFooter ? 'min-h-screen' : 'h-screen overflow-hidden'} flex flex-col bg-surface`} {...sanitizedProps}>
       {/* Header - fixed at top */}
       <header className="fixed top-0 left-0 right-0 z-20 bg-surface-elev border-b border-border/60">
         <Navbar
-          onLoginClick={handleAuthModalOpen}
           user={user}
           onLogout={handleLogout}
         />
@@ -83,10 +69,10 @@ function Layout({ children, showSidebar = true, showFooter = true, ...props }) {
         )}
 
         {/* Main content - scrollable with footer at bottom */}
-        <main className={`flex-1 ${showSidebar ? 'overflow-auto ml-64 h-full' : 'overflow-visible'} ${!showSidebar ? 'w-full' : ''}`}>
+        <main className={`flex-1 ${showSidebar ? 'overflow-auto ml-64 h-full' : showFooter ? 'overflow-visible' : 'overflow-hidden'} ${!showSidebar ? 'w-full' : ''}`}>
           <div className={`${showSidebar ? 'min-h-full flex flex-col' : 'w-full'}`}>
-            <div className={`${showSidebar ? 'flex-1' : ''} p-4 sm:p-6 lg:p-8`}>
-              {children}
+            <div className={`${showSidebar ? 'flex-1' : ''} ${showFooter ? 'p-4 sm:p-6 lg:p-8' : 'h-full'}`}>
+              {React.cloneElement(children, { user })}
             </div>
             
             {/* Footer - only appears at bottom of content, overlaps sidebar */}
@@ -99,12 +85,6 @@ function Layout({ children, showSidebar = true, showFooter = true, ...props }) {
         </main>
       </div>
 
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={handleAuthModalClose}
-        onLogin={handleLogin}
-      />
     </div>
   );
 }

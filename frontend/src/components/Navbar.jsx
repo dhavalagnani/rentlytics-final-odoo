@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
-export default function Navbar({ onLoginClick, user, onLogout }) {
+export default function Navbar({ user, onLogout }) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
+  const navigate = useNavigate()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -189,7 +190,7 @@ export default function Navbar({ onLoginClick, user, onLogout }) {
               </div>
             ) : (
               <button
-                onClick={onLoginClick}
+                onClick={() => navigate('/login')}
                 className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors text-sm"
               >
                 Sign In
