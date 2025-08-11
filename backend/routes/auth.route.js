@@ -1,7 +1,6 @@
 import express from "express";
 import {
   signup,
-  validateOtp,
   login,
   getCurrentUser,
   logout,
@@ -16,19 +15,11 @@ import {
 } from "../middleware/rateLimit.js";
 import { authenticateUser } from "../middleware/auth.js";
 import User from "../models/User.model.js";
-import Otp from "../models/Otp.model.js";
 
 const router = express.Router();
 
 // Signup route
 router.post("/signup", signupRateLimiter, validateSignup, signup);
-
-// // OTP validation route
-// router.post(
-//   "/validate-otp",
-  
-//   validateOtp
-// );
 
 // Login route
 router.post("/login", loginRateLimiter, validateLogin, login);
@@ -65,7 +56,7 @@ router.post(
         });
       }
 
-      // Create new user (inactive)
+      // Create new user (active)
       const user = new User({
         firstName,
         lastName,
@@ -73,27 +64,20 @@ router.post(
         phone: cleanPhone,
         password,
         aadharNumber: cleanAadharNumber,
-        isActive: false,
+        isActive: true,
       });
 
       await user.save();
       console.log("User saved successfully:", user._id);
 
-      // Generate OTP (but don't send email)
-      const otp = Otp.generateOtp();
-      const otpDoc = Otp.createOtp(user._id, otp);
-      await otpDoc.save();
-
       console.log("=== TEST SIGNUP SUCCESS ===");
-      console.log("OTP for testing:", otp);
-      console.log("OTP ID:", otpDoc._id);
+      console.log("User created:", user.userId);
 
       res.status(201).json({
         ok: true,
-        message: "Test signup successful - OTP logged in console",
-        otpId: otpDoc._id,
-        testOtp: otp, // Only for testing!
+        message: "Test signup successful",
         userId: user._id,
+        userUserId: user.userId,
       });
     } catch (error) {
       console.error("Test signup error:", error);

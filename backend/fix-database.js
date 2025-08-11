@@ -83,13 +83,6 @@ const cleanupData = async () => {
     );
     console.log(`✅ Activated ${activateResult.modifiedCount} inactive users`);
 
-    // Remove otps collection entirely since we're not using OTP anymore
-    const collections = await db.listCollections().toArray();
-    if (collections.some(c => c.name === 'otps')) {
-      await db.collection('otps').drop();
-      console.log('🗑️ Dropped otps collection');
-    }
-
     console.log('✅ Data cleanup completed!');
   } catch (error) {
     console.error('❌ Error cleaning up data:', error);

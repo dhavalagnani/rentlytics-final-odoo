@@ -3,6 +3,12 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
+    userId: {
+      type: String,
+      unique: true,
+      required: true,
+      default: () => `USER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    },
     firstName: {
       type: String,
       required: [true, "First name is required"],
@@ -44,7 +50,7 @@ const userSchema = new mongoose.Schema(
     },
     isActive: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
   {
@@ -74,6 +80,7 @@ userSchema.methods.comparePassword = function (candidatePassword) {
 userSchema.methods.toPublicJSON = function () {
   return {
     id: this._id,
+    userId: this.userId,
     firstName: this.firstName,
     lastName: this.lastName,
     email: this.email,

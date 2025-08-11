@@ -62,7 +62,6 @@ function Layout({ children, showSidebar = true, ...props }) {
 
   // Sanitize props to remove any jsx attributes
   const sanitizedProps = sanitizeProps(props);
-
   return (
     <div className="min-h-screen flex flex-col bg-surface" {...sanitizedProps}>
       {/* Header - starts from top-left corner */}

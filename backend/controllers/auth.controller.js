@@ -1,11 +1,9 @@
 import User from "../models/User.model.js";
-import Otp from "../models/Otp.model.js";
 import {
   generateToken,
   getCookieOptions,
   getClearCookieOptions,
 } from "../utils/jwt.js";
-import { sendOtpEmail } from "../utils/mailer.js";
 
 // Signup controller
 export const signup = async (req, res) => {
@@ -36,7 +34,7 @@ export const signup = async (req, res) => {
 
     console.log("Creating new user...");
 
-    // Create new user (inactive)
+    // Create new user (active by default)
     const user = new User({
       firstName,
       lastName,
@@ -44,36 +42,22 @@ export const signup = async (req, res) => {
       phone: cleanPhone,
       password, // Will be hashed by the virtual setter
       aadharNumber: cleanAadharNumber,
-      isActive: false,
+      isActive: true, // Set to true since no OTP verification needed
     });
 
     await user.save();
     console.log("User saved successfully:", user._id);
 
-    // Generate OTP
-    console.log("Generating OTP...");
-    const otp = Otp.generateOtp();
-    console.log("OTP generated:", otp);
+    // Generate JWT token
+    const token = generateToken(user._id);
 
-    const otpDoc = Otp.createOtp(user._id, otp);
-    await otpDoc.save();
-    console.log("OTP saved successfully:", otpDoc._id);
-
-    // Send OTP email
-    console.log("Sending OTP email...");
-    try {
-      await sendOtpEmail(email, firstName, otp);
-      console.log("OTP email sent successfully");
-    } catch (emailError) {
-      console.error("Email sending failed:", emailError);
-      // Don't fail the signup if email fails, just log it
-      // In production, you might want to handle this differently
-    }
+    // Set cookie
+    res.cookie("token", token, getCookieOptions());
 
     res.status(201).json({
       ok: true,
-      message: "OTP sent to your email. Please check and validate.",
-      otpId: otpDoc._id,
+      message: "User registered successfully",
+      firstName: user.firstName,
     });
   } catch (error) {
     console.error("=== SIGNUP ERROR DETAILS ===");
@@ -90,88 +74,6 @@ export const signup = async (req, res) => {
   }
 };
 
-// OTP validation controller
-export const validateOtp = async (req, res) => {
-  try {
-    const { otpId, otp } = req.body;
-
-    // Find OTP document
-    const otpDoc = await Otp.findById(otpId);
-    if (!otpDoc) {
-      return res.status(400).json({
-        ok: false,
-        message: "Invalid OTP ID",
-      });
-    }
-
-    // Check if OTP is already used
-    if (otpDoc.isUsed) {
-      return res.status(400).json({
-        ok: false,
-        message: "OTP has already been used",
-      });
-    }
-
-    // Check if OTP is expired
-    if (new Date() > otpDoc.expiresAt) {
-      return res.status(400).json({
-        ok: false,
-        message: "OTP has expired",
-      });
-    }
-
-    // Check attempts limit
-    if (otpDoc.attempts >= 5) {
-      return res.status(400).json({
-        ok: false,
-        message: "Too many failed attempts. Please request a new OTP",
-      });
-    }
-
-    // Verify OTP
-    if (!otpDoc.verifyOtp(otp)) {
-      await otpDoc.incrementAttempts();
-      return res.status(400).json({
-        ok: false,
-        message: "Invalid OTP",
-      });
-    }
-
-    // Mark OTP as used
-    await otpDoc.markAsUsed();
-
-    // Activate user
-    const user = await User.findById(otpDoc.userId);
-    if (!user) {
-      return res.status(400).json({
-        ok: false,
-        message: "User not found",
-      });
-    }
-
-    user.isActive = true;
-    await user.save();
-
-    // Generate JWT token
-    const token = generateToken(user._id);
-
-    // Set cookie
-    res.cookie("token", token, getCookieOptions());
-
-    res.json({
-      ok: true,
-      message: "Email verified successfully",
-      firstName: user.firstName,
-    });
-  } catch (error) {
-    console.error("OTP validation error:", error);
-    res.status(500).json({
-      ok: false,
-      message: "Internal server error during OTP validation",
-    });
-  }
-};
-
 // Login controller
 export const login = async (req, res) => {
   try {
@@ -183,14 +85,6 @@ export const login = async (req, res) => {
       return res.status(401).json({
         ok: false,
         message: "Invalid email or password",
-      });
-    }
-
-    // Check if account is active
-    if (!user.isActive) {
-      return res.status(401).json({
-        ok: false,
-        message: "Account not activated. Please verify your email first",
       });
     }
 
