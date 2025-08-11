@@ -1,228 +1,317 @@
-# 🚗 EV Management System
+# Complete Authentication System
 
-A comprehensive Electric Vehicle Rental Management System built with MERN stack (MongoDB, Express.js, React, Node.js).
+A full-stack authentication system with OTP validation, built with React + Vite frontend and Node.js + Express backend with MongoDB.
 
-## ✨ Features
+## 🚀 Features
 
-- **User Management**: Multi-role system (Customer, Station Master, Admin)
-- **Station Management**: EV charging stations with geofencing
-- **Vehicle Management**: Electric vehicle tracking and status
-- **Booking System**: Real-time booking with photo verification
-- **Payment Processing**: Integrated payment system
-- **Real-time Tracking**: Live location tracking during rides
-- **Penalty System**: Automated penalty management
-- **Notification System**: Real-time notifications
-- **Geofencing**: Location-based services and validation
+### Backend (Node.js + Express)
+- User registration with email verification via OTP
+- Secure JWT authentication with HTTP-only cookies
+- MongoDB integration with Mongoose
+- Rate limiting to prevent abuse
+- Input validation and sanitization
+- Password hashing with bcrypt
+- Email sending with Nodemailer
+- Comprehensive error handling
 
-## 🚀 Quick Start
+### Frontend (React + Vite)
+- Modern React components with hooks
+- Responsive design with Tailwind CSS
+- OTP validation with countdown timer
+- Toast notifications for user feedback
+- Protected routes and authentication state
+- Form validation with real-time feedback
 
-### Prerequisites
-- Node.js >= 16.0.0
-- MongoDB >= 5.0
-- npm >= 8.0.0
+## 📋 Prerequisites
 
-### Installation
+- Node.js (v16 or higher)
+- MongoDB (local or cloud)
+- SMTP email service (Gmail, SendGrid, etc.)
 
-1. **Clone the repository**
+## 🛠️ Installation & Setup
+
+### 1. Clone the Repository
 ```bash
-git clone <your-repo-url>
-cd ev-management
+git clone <repository-url>
+cd odoo
 ```
 
-2. **Install dependencies**
-```bash
-npm run install-all
-```
+### 2. Backend Setup
 
-3. **Environment Setup**
 ```bash
-# Backend environment
 cd backend
-cp .env.example .env
-# Edit .env with your configuration
+
+# Install dependencies
+npm install
+
+# Create environment file
+cp env.example .env
+
+# Configure environment variables in .env
+# See backend/README.md for detailed configuration
 ```
 
-4. **Start the application**
+**Required Environment Variables:**
+```env
+# Database
+MONGO_URI=mongodb://localhost:27017/auth_system
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-here
+JWT_EXPIRES_IN=7d
+
+# SMTP Configuration for Email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+FROM_EMAIL=your-email@gmail.com
+
+# Environment
+NODE_ENV=development
+PORT=5000
+```
+
+### 3. Frontend Setup
+
 ```bash
-# Start both backend and frontend
-npm run dev
+cd frontend
 
-# Or start individually:
-npm run server    # Backend only
-npm run client    # Frontend only
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
+
+## 🚀 Running the Application
+
+### Development Mode
+
+1. **Start Backend Server:**
+```bash
+cd backend
+npm run dev
+```
+Server will run on `http://localhost:5000`
+
+2. **Start Frontend Development Server:**
+```bash
+cd frontend
+npm run dev
+```
+Frontend will run on `http://localhost:5173`
+
+### Production Mode
+
+1. **Build Frontend:**
+```bash
+cd frontend
+npm run build
+```
+
+2. **Start Backend:**
+```bash
+cd backend
+npm start
+```
+
+## 🔐 Authentication Flow
+
+### 1. User Registration
+1. User fills signup form with required fields:
+   - First Name, Last Name
+   - Email (unique)
+   - Phone (10 digits)
+   - Password (min 6 chars)
+   - Confirm Password
+   - Aadhar Number (12 digits)
+
+2. Backend validates input and creates inactive user
+3. 6-digit OTP is generated and sent via email
+4. Frontend redirects to OTP validation page
+
+### 2. OTP Validation
+1. User enters 6-digit OTP from email
+2. 10-minute countdown timer shows remaining time
+3. Backend validates OTP and activates user account
+4. JWT token is set in HTTP-only cookie
+5. User is redirected to dashboard
+
+### 3. User Login
+1. User enters email and password
+2. Backend authenticates and sets JWT cookie
+3. Frontend updates user state and redirects
+
+### 4. Session Management
+- JWT tokens stored in HTTP-only cookies (7 days)
+- Automatic token validation on protected routes
+- User state managed via React Context
+- Secure logout with cookie clearing
 
 ## 📁 Project Structure
 
 ```
-ev-management/
-├── backend/                 # Node.js/Express backend
-│   ├── config/             # Database configuration
-│   ├── controllers/        # Route controllers
-│   ├── middleware/         # Custom middleware
-│   ├── models/             # MongoDB schemas
-│   ├── routes/             # API routes
-│   ├── utils/              # Utility functions
-│   └── uploads/            # File uploads
-├── frontend/               # React frontend
+odoo/
+├── backend/
+│   ├── controllers/
+│   │   └── authController.js      # Authentication logic
+│   ├── middleware/
+│   │   ├── auth.js               # JWT authentication
+│   │   ├── rateLimit.js          # Rate limiting
+│   │   └── validation.js         # Input validation
+│   ├── models/
+│   │   ├── User.js               # User model
+│   │   └── Otp.js                # OTP model
+│   ├── routes/
+│   │   └── auth.js               # Auth routes
+│   ├── utils/
+│   │   ├── jwt.js                # JWT utilities
+│   │   └── mailer.js             # Email utilities
+│   ├── server.js                 # Express server
+│   ├── package.json
+│   └── README.md
+├── frontend/
 │   ├── src/
-│   │   ├── components/     # Reusable components
-│   │   ├── screens/        # Page components
-│   │   ├── slices/         # Redux slices
-│   │   └── utils/          # Frontend utilities
-│   └── public/             # Static assets
-└── package.json            # Root package configuration
+│   │   ├── components/
+│   │   │   ├── SignupForm.jsx    # Registration form
+│   │   │   ├── LoginForm.jsx     # Login form
+│   │   │   ├── ValidateOtp.jsx   # OTP validation
+│   │   │   └── Navbar.jsx        # Updated navbar
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx   # Auth state management
+│   │   ├── services/
+│   │   │   └── authService.js    # API service
+│   │   └── App.jsx               # Main app component
+│   ├── package.json
+│   └── README.md
+└── README.md
 ```
-
-## 🔧 Configuration
-
-### Backend Environment Variables
-Create a `.env` file in the `backend/` directory:
-
-```env
-PORT=5000
-NODE_ENV=development
-MONGO_URI=mongodb://localhost:27017/ev-management
-JWT_SECRET=your_super_secret_jwt_key_here
-```
-
-### Frontend Configuration
-The frontend is configured to connect to the backend API at `/api` endpoints.
-
-## 📱 Available Scripts
-
-- `npm start` - Start backend server
-- `npm run server` - Start backend in development mode
-- `npm run client` - Start frontend development server
-- `npm run dev` - Start both backend and frontend
-- `npm run build` - Build frontend for production
-- `npm run install-all` - Install all dependencies
-
-## 🌐 API Endpoints
-
-### Authentication
-- `POST /api/users/auth` - User login
-- `POST /api/users` - User registration
-- `POST /api/users/logout` - User logout
-
-### Stations
-- `GET /api/stations` - Get all stations
-- `GET /api/stations/:id` - Get station by ID
-- `GET /api/stations/nearest` - Find nearest stations
-
-### EVs (Electric Vehicles)
-- `GET /api/evs` - Get all EVs
-- `GET /api/evs/:id` - Get EV by ID
-- `POST /api/evs` - Create new EV
-
-### Bookings
-- `GET /api/bookings` - Get user bookings
-- `POST /api/bookings` - Create new booking
-- `PUT /api/bookings/:id` - Update booking
-
-### Payments
-- `POST /api/payments/process` - Process payment
-- `GET /api/payments/user` - Get user payments
-
-### Rides
-- `POST /api/rides/start` - Start a ride
-- `PUT /api/rides/:id/end` - End a ride
-- `GET /api/rides/active` - Get active ride
-
-## 🔐 User Roles
-
-### Customer
-- Browse stations and EVs
-- Make bookings
-- Track rides
-- View payment history
-
-### Station Master
-- Manage station operations
-- Handle EV maintenance
-- Process returns
-- View station analytics
-
-### Admin
-- Full system access
-- User management
-- System configuration
-- Analytics and reporting
-
-## 🗄️ Database Models
-
-- **User**: Customer, Station Master, Admin accounts
-- **Station**: EV charging stations with geolocation
-- **EV**: Electric vehicles with status tracking
-- **Booking**: Ride reservations and management
-- **Ride**: Active ride tracking and history
-- **Payment**: Transaction records
-- **Penalty**: Violation and fine management
-- **Notification**: System notifications
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-1. **MongoDB Connection Failed**
-   - Ensure MongoDB is running
-   - Check connection string in `.env`
-   - Verify network access
-
-2. **Port Already in Use**
-   - Change PORT in `.env`
-   - Kill existing process: `netstat -ano | findstr :5000`
-
-3. **Module Not Found**
-   - Run `npm install` in respective directories
-   - Check import/export syntax
-
-4. **CORS Errors**
-   - Verify CORS configuration in backend
-   - Check frontend API base URL
-
-### Development Tips
-
-- Use `npm run dev` for concurrent development
-- Check backend logs for API errors
-- Use browser dev tools for frontend debugging
-- Monitor MongoDB connections
-
-## 📊 Performance Features
-
-- **Geospatial Indexing**: Fast location-based queries
-- **Real-time Updates**: WebSocket-like functionality
-- **Image Optimization**: Efficient file upload handling
-- **Caching**: Redux state management
-- **Lazy Loading**: Component-based code splitting
 
 ## 🔒 Security Features
 
-- **JWT Authentication**: Secure token-based auth
-- **Password Hashing**: bcrypt encryption
-- **Role-based Access**: Granular permissions
-- **Input Validation**: Request sanitization
-- **CORS Protection**: Cross-origin security
+### Backend Security
+- **Password Hashing**: bcrypt with salt rounds of 12
+- **JWT Tokens**: HTTP-only cookies with secure flags
+- **Rate Limiting**: Prevents OTP and login abuse
+- **Input Validation**: Server-side validation with express-validator
+- **CORS Protection**: Configured for specific origins
+- **OTP Security**: 6-digit, 10-minute expiry, max 5 attempts
 
-## 🤝 Contributing
+### Frontend Security
+- **Client Validation**: Real-time form validation
+- **Secure Cookies**: Automatic handling via withCredentials
+- **Error Handling**: Comprehensive error messages
+- **State Management**: Secure user state via Context
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+## 🧪 Testing
+
+### Backend Health Check
+```bash
+curl http://localhost:5000/health
+```
+
+### API Endpoints
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/validate-otp` - OTP validation
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user
+- `POST /api/auth/logout` - User logout
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **MongoDB Connection Error**
+   - Ensure MongoDB is running
+   - Check MONGO_URI in .env file
+
+2. **Email Not Sending**
+   - Verify SMTP credentials
+   - Check email spam folder
+   - Ensure SMTP service allows app passwords
+
+3. **CORS Errors**
+   - Verify CORS configuration in backend
+   - Check frontend API base URL
+
+4. **JWT Token Issues**
+   - Ensure JWT_SECRET is set
+   - Check cookie settings in production
+
+### Debug Mode
+- Backend: Check console logs for detailed errors
+- Frontend: Open browser dev tools for network requests
+- Database: Use MongoDB Compass for data inspection
+
+## 📚 API Documentation
+
+### Signup Request
+```json
+POST /api/auth/signup
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "phone": "1234567890",
+  "password": "password123",
+  "confirmPassword": "password123",
+  "aadharNumber": "123456789012"
+}
+```
+
+### OTP Validation Request
+```json
+POST /api/auth/validate-otp
+{
+  "otpId": "otp_id_here",
+  "otp": "123456"
+}
+```
+
+### Login Request
+```json
+POST /api/auth/login
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+## 🚀 Deployment
+
+### Backend Deployment
+1. Set `NODE_ENV=production`
+2. Configure production MongoDB URI
+3. Set up production SMTP credentials
+4. Use strong JWT secret
+5. Enable HTTPS
+
+### Frontend Deployment
+1. Update API base URL for production
+2. Build with `npm run build`
+3. Deploy `dist` folder to web server
+4. Ensure HTTPS for secure cookies
 
 ## 📄 License
 
 This project is licensed under the MIT License.
 
-## 🆘 Support
+## 🤝 Contributing
 
-For support and questions:
-- Create an issue in the repository
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📞 Support
+
+For issues and questions:
 - Check the troubleshooting section
-- Review API documentation
+- Review backend and frontend README files
+- Open an issue on GitHub
 
 ---
 
-**Built with ❤️ using MERN Stack** 
+**Note**: This is a complete authentication system with production-ready security features. Make sure to properly configure environment variables and use strong secrets in production. 
