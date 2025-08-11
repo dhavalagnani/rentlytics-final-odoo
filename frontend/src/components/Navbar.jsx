@@ -68,8 +68,7 @@ export default function Navbar({ onLoginClick, user, onLogout }) {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             <Link to="/" className="text-white/80 hover:text-white transition-colors text-sm font-medium">Home</Link>
-            <Link to="/catalog" className="text-white/80 hover:text-white transition-colors text-sm font-medium">Catalog</Link>
-            <Link to="/pricing" className="text-white/80 hover:text-white transition-colors text-sm font-medium">Pricing</Link>
+            <Link to="/dashboard" className="text-white/80 hover:text-white transition-colors text-sm font-medium">Dashboard</Link>
             <Link to="/about" className="text-white/80 hover:text-white transition-colors text-sm font-medium">About</Link>
             <Link to="/contact" className="text-white/80 hover:text-white transition-colors text-sm font-medium">Contact</Link>
           </div>
