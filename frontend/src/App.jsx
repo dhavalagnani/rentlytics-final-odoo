@@ -17,6 +17,7 @@ import Returns from './pages/Returns'
 import Reports from './pages/Reports'
 import CustomerPortal from './pages/CustomerPortal'
 import ProductDetails from './pages/ProductDetails'
+import AddProduct from './pages/AddProduct'
 import AnimatedHero from './components/AnimatedHero'
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
         <Route path="/reports" element={<Layout><Reports /></Layout>} />
         <Route path="/customer-portal" element={<Layout><CustomerPortal /></Layout>} />
         <Route path="/product-details" element={<Layout><ProductDetails /></Layout>} />
+        <Route path="/add-product" element={<Layout><AddProduct /></Layout>} />
       </Routes>
       
       {/* Toast notifications */}

@@ -103,7 +103,12 @@ function Catalog() {
               <option key={category} value={category}>{category}</option>
             ))}
           </select>
-          <button className="btn btn-primary">Add Product</button>
+          <button 
+            className="btn btn-primary"
+            onClick={() => navigate('/add-product')}
+          >
+            Add Product
+          </button>
         </div>
       </div>
 

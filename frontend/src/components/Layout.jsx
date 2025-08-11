@@ -11,7 +11,7 @@ const sanitizeProps = (props) => {
   return domProps;
 };
 
-function Layout({ children, showSidebar = true, ...props }) {
+function Layout({ children, showSidebar = true, showFooter = true, ...props }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [user, setUser] = useState(null);
 
@@ -63,27 +63,41 @@ function Layout({ children, showSidebar = true, ...props }) {
   // Sanitize props to remove any jsx attributes
   const sanitizedProps = sanitizeProps(props);
   return (
-    <div className="min-h-screen flex flex-col bg-surface" {...sanitizedProps}>
-      {/* Header - starts from top-left corner */}
-      <Navbar
-        onLoginClick={handleAuthModalOpen}
-        user={user}
-        onLogout={handleLogout}
-      />
+    <div className={`${showSidebar ? 'h-screen overflow-hidden' : 'min-h-screen'} flex flex-col bg-surface`} {...sanitizedProps}>
+      {/* Header - fixed at top */}
+      <header className="fixed top-0 left-0 right-0 z-20 bg-surface-elev border-b border-border/60">
+        <Navbar
+          onLoginClick={handleAuthModalOpen}
+          user={user}
+          onLogout={handleLogout}
+        />
+      </header>
 
-      {/* Main content area */}
-      <div className="flex flex-1 pt-16">
-        {/* Sidebar - starts immediately under header, flush with left edge */}
-        {showSidebar && <Sidebar />}
+      {/* Main content area - takes remaining height */}
+      <div className={`flex flex-1 pt-16 ${showSidebar ? 'h-full' : ''}`}>
+        {/* Sidebar - fixed position */}
+        {showSidebar && (
+          <aside className="w-64 bg-surface-elev border-r border-border/60 h-full fixed left-0 top-16 z-10">
+            <Sidebar />
+          </aside>
+        )}
 
-        {/* Main content */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+        {/* Main content - scrollable with footer at bottom */}
+        <main className={`flex-1 ${showSidebar ? 'overflow-auto ml-64 h-full' : 'overflow-visible'} ${!showSidebar ? 'w-full' : ''}`}>
+          <div className={`${showSidebar ? 'min-h-full flex flex-col' : 'w-full'}`}>
+            <div className={`${showSidebar ? 'flex-1' : ''} p-4 sm:p-6 lg:p-8`}>
+              {children}
+            </div>
+            
+            {/* Footer - only appears at bottom of content, overlaps sidebar */}
+            {showFooter && (
+              <div className={`${showSidebar ? 'mt-auto -ml-64 pl-64' : 'mt-auto'}`}>
+                <Footer />
+              </div>
+            )}
+          </div>
         </main>
       </div>
-
-      {/* Footer - spans full width */}
-      <Footer />
 
       {/* Auth Modal */}
       <AuthModal
