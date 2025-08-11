@@ -11,7 +11,7 @@ import {
   addProductImage,
   removeProductImage,
 } from "../controllers/product.controller.js";
-import { authenticateToken } from "../middleware/auth.js";
+import { authenticateUser } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -36,18 +36,18 @@ router.get("/:id", getProductById);
 router.get("/owner/:ownerId", getProductsByOwner);
 
 // Owner only routes
-router.post("/", authenticateToken, upload.single("image"), createProduct);
-router.patch("/:id", authenticateToken, upload.single("image"), updateProduct);
-router.delete("/:id", authenticateToken, deleteProduct);
-router.patch("/:id/units", authenticateToken, updateUnitsAvailable);
+router.post("/", authenticateUser, upload.single("image"), createProduct);
+router.patch("/:id", authenticateUser, upload.single("image"), updateProduct);
+router.delete("/:id", authenticateUser, deleteProduct);
+router.patch("/:id/units", authenticateUser, updateUnitsAvailable);
 
 // Image management routes
 router.post(
   "/:id/images",
-  authenticateToken,
+  authenticateUser,
   upload.single("image"),
   addProductImage
 );
-router.delete("/:id/images/:imageIndex", authenticateToken, removeProductImage);
+router.delete("/:id/images/:imageIndex", authenticateUser, removeProductImage);
 
 export default router;

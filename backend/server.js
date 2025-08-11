@@ -12,7 +12,6 @@ import orderRoutes from "./routes/orders.route.js";
 import transactionRoutes from "./routes/transactions.route.js";
 import pricelistRoutes from "./routes/pricelists.route.js";
 import priceRuleRoutes from "./routes/pricerules.route.js";
-import paymentRoutes from "./routes/payments.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 // Load environment variables
@@ -130,7 +129,6 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/pricelists", pricelistRoutes);
 app.use("/api/pricerules", priceRuleRoutes);
-app.use("/api/payments", paymentRoutes);
 
 // Centralized error handling middleware
 app.use(errorHandler);

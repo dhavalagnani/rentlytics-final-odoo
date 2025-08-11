@@ -11,7 +11,7 @@ import {
   changePassword,
   getUserStats,
 } from "../controllers/user.controller.js";
-import { authenticateToken } from "../middleware/auth.js";
+import { authenticateUser } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -31,33 +31,33 @@ const upload = multer({
 });
 
 // Dashboard routes (requires authentication)
-router.get("/dashboard", authenticateToken, getDashboard);
-router.get("/dashboard/download", authenticateToken, downloadDashboardReport);
+router.get("/dashboard", authenticateUser, getDashboard);
+router.get("/dashboard/download", authenticateUser, downloadDashboardReport);
 
 // Report routes (requires authentication)
-router.get("/bookings/report", authenticateToken, getBookingReport);
+router.get("/bookings/report", authenticateUser, getBookingReport);
 router.get(
   "/transactions/report",
-  authenticateToken,
+  authenticateUser,
   getTransactionReportController
 );
 router.get(
   "/analytics/products",
-  authenticateToken,
+  authenticateUser,
   getProductAnalyticsController
 );
 
 // Profile management routes (requires authentication)
-router.put("/profile", authenticateToken, updateProfile);
+router.put("/profile", authenticateUser, updateProfile);
 router.put(
   "/profile/picture",
-  authenticateToken,
+  authenticateUser,
   upload.single("profilePicture"),
   updateProfilePicture
 );
-router.put("/password", authenticateToken, changePassword);
+router.put("/password", authenticateUser, changePassword);
 
 // Statistics route (requires authentication)
-router.get("/stats", authenticateToken, getUserStats);
+router.get("/stats", authenticateUser, getUserStats);
 
 export default router;
