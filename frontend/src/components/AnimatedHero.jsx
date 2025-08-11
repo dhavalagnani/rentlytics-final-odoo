@@ -1,6 +1,12 @@
 import React, { useEffect, useRef } from "react";
 
-export default function AnimatedHero() {
+// Utility function to sanitize props and remove non-DOM attributes
+const sanitizeProps = (props) => {
+  const { jsx, ...domProps } = props;
+  return domProps;
+};
+
+export default function AnimatedHero({ ...props }) {
   const heroRef = useRef(null);
 
   useEffect(() => {
@@ -21,10 +27,14 @@ export default function AnimatedHero() {
     return () => observer.disconnect();
   }, []);
 
+  // Sanitize props to remove any jsx attributes
+  const sanitizedProps = sanitizeProps(props);
+
   return (
     <section
       ref={heroRef}
       className="relative min-h-[calc(100vh-4rem)] flex items-center justify-center overflow-hidden"
+      {...sanitizedProps}
     >
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-surface via-surface to-surface-elev">

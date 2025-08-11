@@ -19,23 +19,30 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// CORS configuration
+// Update FRONTEND_URL in .env if using remote frontend
+const corsOptions = {
+  origin:
+    process.env.NODE_ENV === "production"
+      ? ["https://yourdomain.com"]
+      : [
+          "http://localhost:5173",
+          "http://localhost:3000",
+          "http://localhost:5174",
+          "http://localhost:5172",
+          "http://127.0.0.1:5173",
+          ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+        ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
 // Middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-// CORS configuration
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? ["https://yourdomain.com"]
-        : ["http://localhost:5173", "http://localhost:3000"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors(corsOptions));
 
 // Lightweight health check endpoint (no DB dependency)
 app.get("/api/health", (req, res) => {
@@ -58,7 +65,34 @@ app.get("/health", (req, res) => {
 });
 
 // Test database connection
-app.get("/test-db", async (req, res) => {
+app.get("/api/test-db", (req, res) => {
+  try {
+    const dbState = mongoose.connection.readyState;
+    const states = {
+      0: "disconnected",
+      1: "connected",
+      2: "connecting",
+      3: "disconnecting",
+    };
+
+    res.json({
+      ok: true,
+      message: "Database connection test",
+      dbState: states[dbState],
+      dbStateCode: dbState,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: "Database connection failed",
+      error: error.message,
+    });
+  }
+});
+
+// Legacy test-db route (for backward compatibility)
+app.get("/test-db", (req, res) => {
   try {
     const dbState = mongoose.connection.readyState;
     const states = {
@@ -122,6 +156,10 @@ const connectDB = async (retries = 3, interval = 2000) => {
     process.exit(1);
   }
 
+  // Redact password from URI for logging
+  const logUri = process.env.MONGO_URI.replace(/:([^@]+)@/, ":****@");
+  console.log(`🔗 Connecting to MongoDB: ${logUri}`);
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(
@@ -142,9 +180,13 @@ const connectDB = async (retries = 3, interval = 2000) => {
         `❌ MongoDB connection attempt ${attempt} failed:`,
         error.message
       );
+      console.error("Stack trace:", error.stack);
 
       if (attempt === retries) {
-        console.error("❌ All MongoDB connection attempts failed. Exiting...");
+        console.error("❌ All MongoDB connection attempts failed. Exiting.");
+        console.error(
+          "MongoDB connection failed. Check MONGO_URI in .env. Exiting."
+        );
         console.error("Please check:");
         console.error("1. MongoDB server is running");
         console.error("2. MONGO_URI is correct in your .env file");

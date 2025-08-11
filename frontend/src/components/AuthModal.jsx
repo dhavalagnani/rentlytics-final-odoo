@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { authAPI } from "../services/apiService.js";
 
-export default function AuthModal({ isOpen, onClose, onLogin }) {
+// Utility function to sanitize props and remove non-DOM attributes
+const sanitizeProps = (props) => {
+  const { jsx, ...domProps } = props;
+  return domProps;
+};
+
+export default function AuthModal({ isOpen, onClose, onLogin, ...props }) {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: "",
@@ -166,7 +172,7 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
       const digitsOnly = value.replace(/\D/g, "");
       // Format as (XXX) XXX-XXXX
       if (digitsOnly.length <= 3) {
-        processedValue = digitsOnly;
+        processedValue = `(${digitsOnly}`;
       } else if (digitsOnly.length <= 6) {
         processedValue = `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3)}`;
       } else {
@@ -202,8 +208,14 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
 
   if (!isOpen) return null;
 
+  // Sanitize props to remove any jsx attributes
+  const sanitizedProps = sanitizeProps(props);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      {...sanitizedProps}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -214,9 +226,21 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
       <div className="relative w-full max-w-sm bg-surface-elev border border-border/40 rounded-xl shadow-2xl animate-modalSlideIn">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border/40">
-          <div className="flex items-center space-x-2">
-            <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-primary to-accent grid place-items-center text-white font-extrabold text-xs">
-              R
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
+              <svg
+                className="w-4 h-4 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
             </div>
             <h2 className="text-white font-bold text-base">
               {isLogin ? "Sign In" : "Sign Up"}
@@ -244,7 +268,7 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
 
         {/* Content */}
         <div className="p-4">
-          {/* Toggle Buttons */}
+          {/* Toggle */}
           <div className="flex bg-surface rounded-lg p-1 mb-4">
             <button
               onClick={() => setIsLogin(true)}
@@ -271,119 +295,78 @@ export default function AuthModal({ isOpen, onClose, onLogin }) {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3">
             {!isLogin && (
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs font-medium text-white/80 mb-1">
-                    First Name
-                  </label>
+              <>
+                <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
                     name="firstName"
+                    placeholder="First Name"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className="w-full bg-surface border border-border/60 rounded-lg px-2 py-1.5 text-white placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-primary/60 text-xs"
-                    placeholder="John"
+                    className="input text-xs"
                     required={!isLogin}
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-white/80 mb-1">
-                    Last Name
-                  </label>
                   <input
                     type="text"
                     name="lastName"
+                    placeholder="Last Name"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className="w-full bg-surface border border-border/60 rounded-lg px-2 py-1.5 text-white placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-primary/60 text-xs"
-                    placeholder="Doe"
+                    className="input text-xs"
                     required={!isLogin}
                   />
                 </div>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-medium text-white/80 mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full bg-surface border border-border/60 rounded-lg px-2 py-1.5 text-white placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-primary/60 text-xs"
-                placeholder="john@example.com"
-                required
-              />
-            </div>
-
-            {!isLogin && (
-              <div>
-                <label className="block text-xs font-medium text-white/80 mb-1">
-                  Phone Number
-                </label>
                 <input
                   type="tel"
                   name="phone"
+                  placeholder="Phone Number"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full bg-surface border border-border/60 rounded-lg px-2 py-1.5 text-white placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-primary/60 text-xs"
-                  placeholder="(555) 123-4567 (10 digits)"
-                  maxLength="14"
+                  className="input text-xs"
                   required={!isLogin}
                 />
-              </div>
-            )}
-
-            {!isLogin && (
-              <div>
-                <label className="block text-xs font-medium text-white/80 mb-1">
-                  Aadhar Number
-                </label>
                 <input
                   type="text"
                   name="aadharNumber"
+                  placeholder="Aadhar Number"
                   value={formData.aadharNumber}
                   onChange={handleInputChange}
-                  className="w-full bg-surface border border-border/60 rounded-lg px-2 py-1.5 text-white placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-primary/60 text-xs"
-                  placeholder="1234-5678-9012"
-                  maxLength="14"
+                  className="input text-xs"
                   required={!isLogin}
                 />
-              </div>
+              </>
             )}
 
-            <div>
-              <label className="block text-xs font-medium text-white/80 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="w-full bg-surface border border-border/60 rounded-lg px-2 py-1.5 text-white placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-primary/60 text-xs"
-                placeholder="••••••••"
-                required
-              />
-            </div>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="input text-xs"
+              required
+            />
+
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className="input text-xs"
+              required
+            />
 
             {!isLogin && (
-              <div>
-                <label className="block text-xs font-medium text-white/80 mb-1">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="w-full bg-surface border border-border/60 rounded-lg px-2 py-1.5 text-white placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-primary/60 text-xs"
-                  placeholder="••••••••"
-                  required={!isLogin}
-                />
-              </div>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                className="input text-xs"
+                required={!isLogin}
+              />
             )}
 
             {!isLogin && (
