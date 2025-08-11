@@ -5,7 +5,7 @@ class ProductService {
   // Get all products (excluding user's own products)
   async getAllProducts() {
     try {
-      const response = await api.get('/api/products');
+      const response = await api.get('/products');
       return response.data.data.products || [];
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -16,7 +16,7 @@ class ProductService {
   // Get all products (public - includes all products)
   async getAllProductsPublic() {
     try {
-      const response = await api.get('/api/products/public');
+      const response = await api.get('/products/public');
       return response.data.data.products || [];
     } catch (error) {
       console.error('Error fetching public products:', error);
@@ -27,7 +27,7 @@ class ProductService {
   // Get user's own products
   async getMyProducts() {
     try {
-      const response = await api.get('/api/products/my');
+      const response = await api.get('/products/my');
       return response.data.data.products || [];
     } catch (error) {
       console.error('Error fetching my products:', error);
@@ -64,7 +64,7 @@ class ProductService {
   // Get product by ID
   async getProductById(id) {
     try {
-      const response = await api.get(`/api/products/${id}`);
+      const response = await api.get(`/products/${id}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching product:', error);

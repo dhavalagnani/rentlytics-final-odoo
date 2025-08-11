@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function ProductCard({ product, onView, onReserve }) {
+export default function ProductCard({ product, onView, onRent }) {
   // Get the first image from the product's images array
   const productImage = product.images && product.images.length > 0 ? product.images[0].url : null;
   
@@ -88,11 +88,11 @@ export default function ProductCard({ product, onView, onReserve }) {
             View Details
           </button>
           <button 
-            onClick={() => onReserve(product)}
+            onClick={() => onRent(product)}
             className="btn btn-primary flex-1 text-sm"
             disabled={!isAvailable}
           >
-            {isAvailable ? 'Reserve Now' : 'Unavailable'}
+            {isAvailable ? 'Rent Now' : 'Unavailable'}
           </button>
         </div>
       </div>

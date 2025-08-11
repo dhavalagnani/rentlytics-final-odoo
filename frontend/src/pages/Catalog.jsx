@@ -110,12 +110,12 @@ function Catalog() {
     navigate(`/product-details/${product._id}`)
   }
 
-  const handleReserveProduct = async (product) => {
+  const handleRentProduct = async (product) => {
     try {
       const isAvailable = await productService.checkAvailability(product.id)
       if (isAvailable) {
-        alert(`Reserving ${product.name}`)
-        // In a real app, this would navigate to a reservation form
+        alert(`Renting ${product.name}`)
+        // In a real app, this would navigate to a rental form
       } else {
         alert(`${product.name} is not available for the selected dates`)
       }
@@ -170,7 +170,7 @@ function Catalog() {
             key={product._id} 
             product={product}
             onView={handleViewProduct}
-            onReserve={handleReserveProduct}
+            onRent={handleRentProduct}
           />
         ))}
       </div>

@@ -234,7 +234,7 @@ export default function ProductDetails() {
                 className="btn btn-primary w-full" 
                 disabled={!selectedDates.start || !selectedDates.end || product.unitsAvailable === 0}
               >
-                {product.unitsAvailable === 0 ? 'Not Available' : 'Reserve Now'}
+                {product.unitsAvailable === 0 ? 'Not Available' : 'Rent Now'}
               </button>
             </div>
           </div>
