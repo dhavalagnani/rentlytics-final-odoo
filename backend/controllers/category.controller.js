@@ -33,7 +33,7 @@ export const getCategories = async (req, res, next) => {
 // Get category by ID
 export const getCategoryById = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Category._id;
 
     const category = await Category.findById(id).lean();
 
@@ -92,7 +92,7 @@ export const createCategory = async (req, res, next) => {
 // Update category
 export const updateCategory = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Category._id;
     const updateData = req.body;
 
     const category = await Category.findByIdAndUpdate(id, updateData, {
@@ -120,7 +120,7 @@ export const updateCategory = async (req, res, next) => {
 // Delete category
 export const deleteCategory = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Category._id;
 
     const category = await Category.findByIdAndDelete(id);
 

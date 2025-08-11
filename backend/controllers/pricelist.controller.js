@@ -33,7 +33,7 @@ export const getPricelists = async (req, res, next) => {
 // Get pricelist by ID
 export const getPricelistById = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Pricelist._id;
 
     const pricelist = await Pricelist.findById(id).lean();
 
@@ -95,7 +95,7 @@ export const createPricelist = async (req, res, next) => {
 // Update pricelist
 export const updatePricelist = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Pricelist._id;
     const updateData = req.body;
 
     const pricelist = await Pricelist.findByIdAndUpdate(id, updateData, {
@@ -123,7 +123,7 @@ export const updatePricelist = async (req, res, next) => {
 // Delete pricelist
 export const deletePricelist = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Pricelist._id;
 
     const pricelist = await Pricelist.findByIdAndDelete(id);
 
@@ -146,7 +146,7 @@ export const deletePricelist = async (req, res, next) => {
 // Get pricelists by customer type
 export const getPricelistsByCustomerType = async (req, res, next) => {
   try {
-    const { customerType } = req.params;
+    const { customerType } = req.Pricelist._id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -187,7 +187,7 @@ export const getPricelistsByCustomerType = async (req, res, next) => {
 // Get pricelists by region
 export const getPricelistsByRegion = async (req, res, next) => {
   try {
-    const { region } = req.params;
+    const { region } = req.Pricelist._id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;

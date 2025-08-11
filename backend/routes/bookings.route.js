@@ -13,12 +13,12 @@ const router = express.Router();
 
 // Protected routes
 router.get("/", authenticateUser, getBookings);
-router.get("/:id", authenticateUser, getBookingById);
-router.get("/user/:userId", authenticateUser, getBookingsByUser);
+router.get("/getbyid", authenticateUser, getBookingById);
+router.get("/getbyuser", authenticateUser, getBookingsByUser);
 
 // User routes
-router.post("/", authenticateUser, createBooking);
-router.patch("/:id", authenticateUser, updateBooking);
-router.patch("/:id/cancel", authenticateUser, cancelBooking);
+router.post("/create", authenticateUser, createBooking);
+router.patch("/update", authenticateUser, updateBooking);
+router.patch("/cancel", authenticateUser, cancelBooking);
 
 export default router;

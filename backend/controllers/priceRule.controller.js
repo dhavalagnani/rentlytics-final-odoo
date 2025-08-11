@@ -39,7 +39,7 @@ export const getPriceRules = async (req, res, next) => {
 // Get price rule by ID
 export const getPriceRuleById = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.PriceRule._id;
 
     const priceRule = await PriceRule.findById(id)
       .populate("productId", "name")
@@ -108,7 +108,7 @@ export const createPriceRule = async (req, res, next) => {
 // Update price rule
 export const updatePriceRule = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.PriceRule._id;
     const updateData = req.body;
 
     const priceRule = await PriceRule.findByIdAndUpdate(id, updateData, {
@@ -138,7 +138,7 @@ export const updatePriceRule = async (req, res, next) => {
 // Delete price rule
 export const deletePriceRule = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.PriceRule._id;
 
     const priceRule = await PriceRule.findByIdAndDelete(id);
 
@@ -161,7 +161,7 @@ export const deletePriceRule = async (req, res, next) => {
 // Toggle price rule enabled status
 export const togglePriceRule = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.PriceRule._id;
 
     const priceRule = await PriceRule.findById(id);
     if (!priceRule) {
@@ -193,7 +193,7 @@ export const togglePriceRule = async (req, res, next) => {
 // Get price rules by product
 export const getPriceRulesByProduct = async (req, res, next) => {
   try {
-    const { productId } = req.params;
+    const { productId } = req.PriceRule._id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -241,7 +241,7 @@ export const getPriceRulesByProduct = async (req, res, next) => {
 // Get price rules by category
 export const getPriceRulesByCategory = async (req, res, next) => {
   try {
-    const { categoryId } = req.params;
+    const { categoryId } = req.PriceRule._id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;

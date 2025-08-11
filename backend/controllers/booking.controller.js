@@ -13,7 +13,7 @@ export const getBookings = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     const bookings = await Booking.find()
-      .populate("userId", "name email")
+      .populate("userId", "firstName lastName email")
       .populate("productId", "name images")
       .lean()
       .skip(skip)
@@ -42,10 +42,10 @@ export const getBookings = async (req, res, next) => {
 // Get booking by ID
 export const getBookingById = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Booking._id;
 
     const booking = await Booking.findById(id)
-      .populate("userId", "name email")
+      .populate("userId", "firstName lastName email")
       .populate("productId", "name images baseRates")
       .lean();
 
@@ -202,14 +202,14 @@ export const createBooking = async (req, res, next) => {
 // Update booking
 export const updateBooking = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Booking._id;
     const updateData = req.body;
 
     const booking = await Booking.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     })
-      .populate("userId", "name email")
+      .populate("userId", "firstName lastName email")
       .populate("productId", "name images");
 
     if (!booking) {
@@ -232,7 +232,7 @@ export const updateBooking = async (req, res, next) => {
 // Cancel booking
 export const cancelBooking = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Booking._id;
 
     const booking = await Booking.findById(id);
     if (!booking) {
@@ -279,7 +279,7 @@ export const cancelBooking = async (req, res, next) => {
 // Get bookings by user
 export const getBookingsByUser = async (req, res, next) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.Booking._id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;

@@ -11,7 +11,7 @@ export const getTransactions = async (req, res, next) => {
 
     const transactions = await Transaction.find()
       .populate("orderId", "orderId invoiceNumber totalAmount")
-      .populate("userId", "name email")
+      .populate("userId", "firstName lastName email")
       .lean()
       .skip(skip)
       .limit(limit);
@@ -39,14 +39,14 @@ export const getTransactions = async (req, res, next) => {
 // Get transaction by ID
 export const getTransactionById = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Transaction._id;
 
     const transaction = await Transaction.findById(id)
       .populate(
         "orderId",
         "orderId invoiceNumber totalAmount amountPaid amountDue"
       )
-      .populate("userId", "name email")
+      .populate("userId", "firstName lastName email")
       .lean();
 
     if (!transaction) {
@@ -126,7 +126,7 @@ export const createTransaction = async (req, res, next) => {
 // Update transaction
 export const updateTransaction = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Transaction._id;
     const updateData = req.body;
 
     const transaction = await Transaction.findByIdAndUpdate(id, updateData, {
@@ -134,7 +134,7 @@ export const updateTransaction = async (req, res, next) => {
       runValidators: true,
     })
       .populate("orderId", "orderId invoiceNumber totalAmount")
-      .populate("userId", "name email");
+      .populate("userId", "firstName lastName email");
 
     if (!transaction) {
       return res.status(404).json({
@@ -161,7 +161,7 @@ export const updateTransaction = async (req, res, next) => {
 // Delete transaction
 export const deleteTransaction = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Transaction._id;
 
     const transaction = await Transaction.findById(id);
     if (!transaction) {
@@ -194,7 +194,7 @@ export const getTransactionsByOrder = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     const transactions = await Transaction.find({ orderId })
-      .populate("userId", "name email")
+      .populate("userId", "firstName lastName email")
       .lean()
       .skip(skip)
       .limit(limit);
@@ -222,7 +222,7 @@ export const getTransactionsByOrder = async (req, res, next) => {
 // Get transactions by user
 export const getTransactionsByUser = async (req, res, next) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.Transaction._id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -263,7 +263,7 @@ export const getTransactionsByStatus = async (req, res, next) => {
 
     const transactions = await Transaction.find({ status })
       .populate("orderId", "orderId invoiceNumber totalAmount")
-      .populate("userId", "name email")
+      .populate("userId", "firstName lastName email")
       .lean()
       .skip(skip)
       .limit(limit);

@@ -14,19 +14,19 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getPriceRules);
-router.get("/:id", getPriceRuleById);
+router.get("/getbyid", getPriceRuleById);
 
 // Protected routes (admin only)
-router.post("/", authenticateUser, createPriceRule);
-router.patch("/:id", authenticateUser, updatePriceRule);
-router.delete("/:id", authenticateUser, deletePriceRule);
+router.post("/create", authenticateUser, createPriceRule);
+router.patch("/update", authenticateUser, updatePriceRule);
+router.delete("/delete", authenticateUser, deletePriceRule);
 router.patch(
-  "/:id/toggle",
+  "/toggle",
   authenticateUser,
   togglePriceRule
 );
 router.post(
-  "/:id/test",
+  "/test",
   authenticateUser,
   testPriceRule
 );

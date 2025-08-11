@@ -12,19 +12,11 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getPricelists);
-router.get("/:id", getPricelistById);
+router.get("/getbyid", getPricelistById);
 
 // Protected routes (admin only)
-router.post("/", authenticateUser, createPricelist);
-router.patch(
-  "/:id",
-  authenticateUser,
-  updatePricelist
-);
-router.delete(
-  "/:id",
-  authenticateUser,
-  deletePricelist
-);
+router.post("/create", authenticateUser, createPricelist);
+router.patch("/update", authenticateUser, updatePricelist);
+router.delete("/delete", authenticateUser, deletePricelist);
 
 export default router;

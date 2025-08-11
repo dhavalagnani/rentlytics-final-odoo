@@ -15,16 +15,16 @@ const router = express.Router();
 
 // Protected routes
 router.get("/", authenticateUser, getOrders);
-router.get("/:id", authenticateUser, getOrderById);
-router.get("/booking/:bookingId", authenticateUser, getOrdersByBooking);
+router.get("/getbyid", authenticateUser, getOrderById);
+router.get("/getbybooking", authenticateUser, getOrdersByBooking);
 router.get("/overdue/list", authenticateUser, getOverdueOrders);
 
 // User routes
-router.post("/", authenticateUser, createOrder);
-router.patch("/:id", authenticateUser, updateOrder);
-router.patch("/:id/payment", authenticateUser, updatePaymentStatus);
+router.post("/create", authenticateUser, createOrder);
+router.patch("/order", authenticateUser, updateOrder);
+router.patch("/update/payment", authenticateUser, updatePaymentStatus);
 
 // Admin only routes
-router.delete("/:id", authenticateUser, deleteOrder);
+router.delete("/delete", authenticateUser, deleteOrder);
 
 export default router;

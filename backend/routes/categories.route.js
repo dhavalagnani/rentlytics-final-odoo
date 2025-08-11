@@ -12,11 +12,11 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getCategories);
-router.get("/:id", getCategoryById);
+router.get("/getbyid", getCategoryById);
 
 // Admin only routes
-router.post("/", authenticateUser, createCategory);
-router.patch("/:id", authenticateUser, updateCategory);
-router.delete("/:id", authenticateUser, deleteCategory);
+router.post("/create", authenticateUser, createCategory);
+router.patch("/update", authenticateUser, updateCategory);
+router.delete("/delete", authenticateUser, deleteCategory);
 
 export default router;

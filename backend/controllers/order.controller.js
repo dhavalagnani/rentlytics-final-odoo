@@ -47,7 +47,7 @@ export const getOrders = async (req, res, next) => {
 // Get order by ID
 export const getOrderById = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Order._id;
 
     const order = await Order.findById(id)
       .populate("bookingId", "bookingId startDate endDate pricingSnapshot")
@@ -148,7 +148,7 @@ export const createOrder = async (req, res, next) => {
 // Update order
 export const updateOrder = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Order._id;
     const updateData = req.body;
 
     const order = await Order.findByIdAndUpdate(id, updateData, {
@@ -176,7 +176,7 @@ export const updateOrder = async (req, res, next) => {
 // Update order payment status
 export const updatePaymentStatus = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Order._id;
     const { amountPaid, status } = req.body;
 
     const order = await Order.findById(id);
@@ -219,7 +219,7 @@ export const updatePaymentStatus = async (req, res, next) => {
 // Delete order
 export const deleteOrder = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.Order._id;
 
     const order = await Order.findByIdAndDelete(id);
 
@@ -242,7 +242,7 @@ export const deleteOrder = async (req, res, next) => {
 // Get orders by booking
 export const getOrdersByBooking = async (req, res, next) => {
   try {
-    const { bookingId } = req.params;
+    const { bookingId } = req.Order._id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
