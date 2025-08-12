@@ -338,3 +338,358 @@ const recalculateOrderPaymentStatus = async (orderId) => {
     amountDue: { $subtract: ["$totalAmount", totalPaid] },
   });
 };
+
+// Get transactions by type
+export const getTransactionsByType = async (req, res, next) => {
+  try {
+    const { type } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const transactions = await Transaction.find({ type })
+      .populate("orderId", "orderId invoiceNumber totalAmount")
+      .populate("userId", "firstName lastName email")
+      .lean()
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Transaction.countDocuments({ type });
+
+    res.json({
+      success: true,
+      data: {
+        transactions,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      },
+      message: `${type} transactions retrieved successfully`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Process payment
+export const processPayment = async (req, res, next) => {
+  try {
+    const validation = validateRequest(req.body, [
+      "orderId",
+      "amount",
+      "method",
+      "paymentDetails",
+    ]);
+
+    if (!validation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: validation.message,
+      });
+    }
+
+    const { orderId, amount, method, paymentDetails } = req.body;
+    const userId = req.user._id;
+
+    // Verify order exists
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // Create transaction
+    const transaction = new Transaction({
+      transactionId: `TXN${Date.now()}`,
+      orderId,
+      userId,
+      amount,
+      method,
+      type: "payment",
+      status: "completed",
+      transactionRef: paymentDetails.reference || `REF${Date.now()}`,
+      stage: "completed",
+      paymentDetails,
+    });
+
+    await transaction.save();
+    await updateOrderPaymentStatus(orderId, amount);
+
+    res.json({
+      success: true,
+      data: transaction,
+      message: "Payment processed successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Process refund
+export const processRefund = async (req, res, next) => {
+  try {
+    const validation = validateRequest(req.body, [
+      "transactionId",
+      "amount",
+      "reason",
+    ]);
+
+    if (!validation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: validation.message,
+      });
+    }
+
+    const { transactionId, amount, reason } = req.body;
+    const userId = req.user._id;
+
+    // Find original transaction
+    const originalTransaction = await Transaction.findById(transactionId);
+    if (!originalTransaction) {
+      return res.status(404).json({
+        success: false,
+        message: "Original transaction not found",
+      });
+    }
+
+    // Create refund transaction
+    const refundTransaction = new Transaction({
+      transactionId: `REF${Date.now()}`,
+      orderId: originalTransaction.orderId,
+      userId,
+      amount: -amount, // Negative amount for refund
+      method: originalTransaction.method,
+      type: "refund",
+      status: "completed",
+      transactionRef: `REF${Date.now()}`,
+      stage: "completed",
+      refundDetails: {
+        originalTransactionId: transactionId,
+        reason,
+        refundAmount: amount,
+      },
+    });
+
+    await refundTransaction.save();
+    await recalculateOrderPaymentStatus(originalTransaction.orderId);
+
+    res.json({
+      success: true,
+      data: refundTransaction,
+      message: "Refund processed successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get transaction statistics
+export const getTransactionStats = async (req, res, next) => {
+  try {
+    const totalTransactions = await Transaction.countDocuments();
+    const completedTransactions = await Transaction.countDocuments({
+      status: "completed",
+    });
+    const pendingTransactions = await Transaction.countDocuments({
+      status: "pending",
+    });
+    const failedTransactions = await Transaction.countDocuments({
+      status: "failed",
+    });
+
+    // Calculate total revenue
+    const revenueResult = await Transaction.aggregate([
+      { $match: { status: "completed", amount: { $gt: 0 } } },
+      { $group: { _id: null, totalRevenue: { $sum: "$amount" } } },
+    ]);
+    const totalRevenue = revenueResult[0]?.totalRevenue || 0;
+
+    // Calculate revenue growth (simplified - compare with previous month)
+    const currentMonth = new Date();
+    const previousMonth = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth() - 1,
+      1
+    );
+
+    const currentMonthRevenue = await Transaction.aggregate([
+      {
+        $match: {
+          status: "completed",
+          amount: { $gt: 0 },
+          createdAt: {
+            $gte: new Date(
+              currentMonth.getFullYear(),
+              currentMonth.getMonth(),
+              1
+            ),
+          },
+        },
+      },
+      { $group: { _id: null, revenue: { $sum: "$amount" } } },
+    ]);
+
+    const previousMonthRevenue = await Transaction.aggregate([
+      {
+        $match: {
+          status: "completed",
+          amount: { $gt: 0 },
+          createdAt: {
+            $gte: previousMonth,
+            $lt: new Date(
+              currentMonth.getFullYear(),
+              currentMonth.getMonth(),
+              1
+            ),
+          },
+        },
+      },
+      { $group: { _id: null, revenue: { $sum: "$amount" } } },
+    ]);
+
+    const currentRevenue = currentMonthRevenue[0]?.revenue || 0;
+    const previousRevenue = previousMonthRevenue[0]?.revenue || 0;
+    const revenueGrowth =
+      previousRevenue > 0
+        ? ((currentRevenue - previousRevenue) / previousRevenue) * 100
+        : 0;
+
+    res.json({
+      success: true,
+      data: {
+        totalTransactions,
+        completedTransactions,
+        pendingTransactions,
+        failedTransactions,
+        totalRevenue,
+        revenueGrowth: Math.round(revenueGrowth * 100) / 100,
+      },
+      message: "Transaction statistics retrieved successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get revenue analytics
+export const getRevenueAnalytics = async (req, res, next) => {
+  try {
+    const { period = "month" } = req.query;
+    let groupBy, dateFormat;
+
+    switch (period) {
+      case "day":
+        groupBy = { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } };
+        dateFormat = "%Y-%m-%d";
+        break;
+      case "week":
+        groupBy = { $dateToString: { format: "%Y-W%U", date: "$createdAt" } };
+        dateFormat = "%Y-W%U";
+        break;
+      case "month":
+      default:
+        groupBy = { $dateToString: { format: "%Y-%m", date: "$createdAt" } };
+        dateFormat = "%Y-%m";
+        break;
+    }
+
+    const revenueData = await Transaction.aggregate([
+      {
+        $match: {
+          status: "completed",
+          amount: { $gt: 0 },
+          createdAt: { $gte: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) }, // Last year
+        },
+      },
+      {
+        $group: {
+          _id: groupBy,
+          amount: { $sum: "$amount" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const formattedData = revenueData.map((item) => ({
+      period: item._id,
+      amount: item.amount,
+      count: item.count,
+    }));
+
+    res.json({
+      success: true,
+      data: formattedData,
+      message: "Revenue analytics retrieved successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Export transactions
+export const exportTransactions = async (req, res, next) => {
+  try {
+    const { startDate, endDate, reportType } = req.body;
+
+    let query = {};
+
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    const transactions = await Transaction.find(query)
+      .populate("orderId", "orderId invoiceNumber totalAmount")
+      .populate("userId", "firstName lastName email")
+      .lean();
+
+    // Convert to CSV format
+    const csvHeaders = [
+      "Transaction ID",
+      "Date",
+      "Customer",
+      "Order ID",
+      "Amount",
+      "Method",
+      "Type",
+      "Status",
+      "Reference",
+    ];
+
+    const csvData = transactions.map((txn) => [
+      txn.transactionId,
+      new Date(txn.createdAt).toISOString().split("T")[0],
+      `${txn.userId?.firstName || ""} ${txn.userId?.lastName || ""}`,
+      txn.orderId?.orderId || "",
+      txn.amount,
+      txn.method,
+      txn.type,
+      txn.status,
+      txn.transactionRef,
+    ]);
+
+    const csvContent = [csvHeaders, ...csvData]
+      .map((row) => row.map((field) => `"${field}"`).join(","))
+      .join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=transactions-${
+        new Date().toISOString().split("T")[0]
+      }.csv`
+    );
+    res.send(csvContent);
+  } catch (error) {
+    next(error);
+  }
+};

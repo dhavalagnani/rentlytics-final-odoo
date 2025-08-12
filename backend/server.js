@@ -12,7 +12,10 @@ import orderRoutes from "./routes/orders.route.js";
 import transactionRoutes from "./routes/transactions.route.js";
 import pricelistRoutes from "./routes/pricelists.route.js";
 import priceRuleRoutes from "./routes/pricerules.route.js";
+import notificationRoutes from "./routes/notification.js";
+import settingsRoutes from "./routes/settings.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { requestLogger, errorLogger } from "./middleware/logger.js";
 
 // Load environment variables
 dotenv.config();
@@ -44,6 +47,9 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors(corsOptions));
+
+// Add logging middleware for debugging
+app.use(requestLogger);
 
 // Lightweight health check endpoint (no DB dependency)
 app.get("/api/health", (req, res) => {
@@ -138,8 +144,11 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/pricelists", pricelistRoutes);
 app.use("/api/pricerules", priceRuleRoutes);
+app.use("/api/notification", notificationRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Centralized error handling middleware
+app.use(errorLogger);
 app.use(errorHandler);
 
 // 404 handler

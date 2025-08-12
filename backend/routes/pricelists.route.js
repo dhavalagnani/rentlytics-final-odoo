@@ -13,16 +13,16 @@ import { authenticateUser } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Public routes
-router.get("/", getPricelists);
-router.get("/getbyid", getPricelistById);
-router.get("/customer-type", getPricelistsByCustomerType);
-router.get("/region", getPricelistsByRegion);
-router.get("/active", getActivePricelists);
+// All routes require authentication for user-specific access
+router.get("/", authenticateUser, getPricelists);
+router.get("/getbyid", authenticateUser, getPricelistById);
+router.get("/customer-type", authenticateUser, getPricelistsByCustomerType);
+router.get("/region", authenticateUser, getPricelistsByRegion);
+router.get("/active", authenticateUser, getActivePricelists);
 
-// Protected routes (admin only)
+// Protected routes (user-specific)
 router.post("/create", authenticateUser, createPricelist);
-router.patch("/update", updatePricelist); // Temporarily public for testing
+router.patch("/update", authenticateUser, updatePricelist);
 router.delete("/delete", authenticateUser, deletePricelist);
 
 export default router;
