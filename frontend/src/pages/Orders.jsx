@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/apiService'
@@ -11,20 +12,47 @@ export default function Orders() {
   useEffect(() => {
     fetchOrders()
   }, [])
+=======
+import React, { useState, useEffect } from "react";
+import OrderRow from "../components/OrderRow";
+import orderService from "../services/orderService";
+import NotificationModal from "../components/NotificationModal";
+
+function Orders() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({});
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  useEffect(() => {
+    loadOrders();
+    loadStats();
+  }, []);
+>>>>>>> booking
 
   const fetchOrders = async () => {
     try {
+<<<<<<< HEAD
       setLoading(true)
       const response = await api.get('/user/bookings')
       setOrders(response.data.data.bookings || [])
     } catch (error) {
       console.error('Error fetching orders:', error)
       toast.error('Failed to load orders')
+=======
+      setLoading(true);
+      const data = await orderService.getAllOrders();
+      setOrders(data);
+    } catch (error) {
+      console.error("Error loading orders:", error);
+>>>>>>> booking
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+<<<<<<< HEAD
   const getStatusColor = (status) => {
     switch (status) {
       case 'confirmed':
@@ -37,9 +65,18 @@ export default function Orders() {
         return 'text-blue-300'
       default:
         return 'text-gray-300'
+=======
+  const loadStats = async () => {
+    try {
+      const data = await orderService.getOrderStats();
+      setStats(data);
+    } catch (error) {
+      console.error("Error loading stats:", error);
+>>>>>>> booking
     }
-  }
+  };
 
+<<<<<<< HEAD
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
       year: 'numeric',
@@ -54,18 +91,42 @@ export default function Orders() {
       currency: 'INR'
     }).format(amount)
   }
+=======
+  const handleViewOrder = (order) => {
+    alert(`Viewing order ${order.id}`);
+  };
+
+  const handleEditOrder = (order) => {
+    alert(`Editing order ${order.id}`);
+  };
+
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    try {
+      await orderService.updateOrderStatus(orderId, newStatus);
+      loadOrders(); // Reload orders to get updated data
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
+  };
+
+  const handleSendNotification = (order) => {
+    setSelectedOrder(order);
+    setShowNotificationModal(true);
+  };
+>>>>>>> booking
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-white">Loading orders...</div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
+<<<<<<< HEAD
         <h2 className="text-2xl font-bold text-white">My Orders</h2>
         <button 
           onClick={() => navigate('/catalog')}
@@ -86,6 +147,58 @@ export default function Orders() {
           >
             Browse Catalog
           </button>
+=======
+        <h2 className="text-2xl font-bold text-white">Orders</h2>
+        <div className="flex gap-4 text-sm">
+          <div className="text-white/60">
+            Total: <span className="text-white">{stats.total}</span>
+          </div>
+          <div className="text-green-400">
+            Confirmed: <span className="text-white">{stats.confirmed}</span>
+          </div>
+          <div className="text-blue-400">
+            Pickup: <span className="text-white">{stats.pickup}</span>
+          </div>
+          <div className="text-red-400">
+            Late: <span className="text-white">{stats.late}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-white/5 text-white/70">
+              <tr>
+                {[
+                  "Order",
+                  "Customer",
+                  "Item",
+                  "Period",
+                  "Status",
+                  "Amount",
+                  "",
+                ].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left font-medium">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {orders.map((order) => (
+                <OrderRow
+                  key={order.id}
+                  order={order}
+                  onView={handleViewOrder}
+                  onEdit={handleEditOrder}
+                  onStatusUpdate={handleStatusUpdate}
+                  onSendNotification={handleSendNotification}
+                />
+              ))}
+            </tbody>
+          </table>
+>>>>>>> booking
         </div>
       ) : (
         <div className="space-y-4">
@@ -184,6 +297,21 @@ export default function Orders() {
           ))}
         </div>
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => {
+          setShowNotificationModal(false);
+          setSelectedOrder(null);
+        }}
+        bookingId={selectedOrder?.id}
+      />
     </div>
-  )
+  );
 }
+<<<<<<< HEAD
+=======
+
+export default Orders;
+>>>>>>> booking

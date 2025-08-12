@@ -1,14 +1,14 @@
 // Product service for handling product operations
-import api from './apiService.js';
+import api from "./apiService.js";
 
 class ProductService {
   // Get all products (excluding user's own products)
   async getAllProducts() {
     try {
-      const response = await api.get('/products');
+      const response = await api.get("/products");
       return response.data.data.products || [];
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
       return [];
     }
   }
@@ -16,10 +16,10 @@ class ProductService {
   // Get all products (public - includes all products)
   async getAllProductsPublic() {
     try {
-      const response = await api.get('/products/public');
+      const response = await api.get("/products/public");
       return response.data.data.products || [];
     } catch (error) {
-      console.error('Error fetching public products:', error);
+      console.error("Error fetching public products:", error);
       return [];
     }
   }
@@ -27,11 +27,22 @@ class ProductService {
   // Get user's own products
   async getMyProducts() {
     try {
-      const response = await api.get('/products/my');
+      const response = await api.get("/products/my");
       return response.data.data.products || [];
     } catch (error) {
-      console.error('Error fetching my products:', error);
+      console.error("Error fetching my products:", error);
       return [];
+    }
+  }
+
+  // Get products (alias for getAllProducts)
+  async getProducts() {
+    try {
+      const response = await api.get("/products");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      return { products: [] };
     }
   }
 
@@ -39,24 +50,24 @@ class ProductService {
   async searchProducts(searchParams) {
     try {
       const params = new URLSearchParams();
-      
+
       if (searchParams.query) {
-        params.append('q', searchParams.query);
+        params.append("q", searchParams.query);
       }
       if (searchParams.category) {
-        params.append('category', searchParams.category);
+        params.append("category", searchParams.category);
       }
       if (searchParams.minPrice) {
-        params.append('minPrice', searchParams.minPrice);
+        params.append("minPrice", searchParams.minPrice);
       }
       if (searchParams.maxPrice) {
-        params.append('maxPrice', searchParams.maxPrice);
+        params.append("maxPrice", searchParams.maxPrice);
       }
-      
+
       const response = await api.get(`/products/search?${params.toString()}`);
       return response.data.data.products || [];
     } catch (error) {
-      console.error('Error searching products:', error);
+      console.error("Error searching products:", error);
       return [];
     }
   }
@@ -67,7 +78,7 @@ class ProductService {
       const response = await api.get(`/products/category/${categoryId}`);
       return response.data.data.products || [];
     } catch (error) {
-      console.error('Error fetching products by category:', error);
+      console.error("Error fetching products by category:", error);
       return [];
     }
   }
@@ -78,7 +89,7 @@ class ProductService {
       const response = await api.get(`/products/${id}`);
       return response.data.data;
     } catch (error) {
-      console.error('Error fetching product:', error);
+      console.error("Error fetching product:", error);
       return null;
     }
   }
@@ -86,12 +97,17 @@ class ProductService {
   // Create new product (admin only)
   async createProduct(productData) {
     try {
+<<<<<<< HEAD
       // Temporarily return success until backend route is created
       return { ok: true };
       // const response = await api.post('/products', productData);
       // return response.data;
+=======
+      const response = await api.post("/products", productData);
+      return response.data;
+>>>>>>> booking
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error("Error creating product:", error);
       throw error;
     }
   }
@@ -99,12 +115,17 @@ class ProductService {
   // Update product (admin only)
   async updateProduct(id, productData) {
     try {
+<<<<<<< HEAD
       // Temporarily return success until backend route is created
       return { ok: true };
       // const response = await api.put(`/products/${id}`, productData);
       // return response.data;
+=======
+      const response = await api.patch(`/products/${id}`, productData);
+      return response.data;
+>>>>>>> booking
     } catch (error) {
-      console.error('Error updating product:', error);
+      console.error("Error updating product:", error);
       throw error;
     }
   }
@@ -112,12 +133,17 @@ class ProductService {
   // Delete product (admin only)
   async deleteProduct(id) {
     try {
+<<<<<<< HEAD
       // Temporarily return success until backend route is created
       return { ok: true };
       // const response = await api.delete(`/products/${id}`);
       // return response.data;
+=======
+      const response = await api.delete(`/products/${id}`);
+      return response.data;
+>>>>>>> booking
     } catch (error) {
-      console.error('Error deleting product:', error);
+      console.error("Error deleting product:", error);
       throw error;
     }
   }

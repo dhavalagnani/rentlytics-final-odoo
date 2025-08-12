@@ -281,6 +281,18 @@ html {
   @apply text-white/80 hover:bg-white/5;
 }
 
+.btn-secondary {
+  @apply bg-white/10 hover:bg-white/20 text-white border border-white/20;
+}
+
+.btn-success {
+  @apply bg-green-500 hover:bg-green-600 text-white;
+}
+
+.btn-danger {
+  @apply bg-red-500 hover:bg-red-600 text-white;
+}
+
 .card {
   @apply rounded-2xl bg-card/70 border border-border/50 shadow-lg;
 }

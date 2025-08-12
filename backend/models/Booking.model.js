@@ -55,12 +55,74 @@ const bookingSchema = new mongoose.Schema(
       enum: [
         "pending",
         "confirmed",
-        "pickedup",
+        "reserved",
+        "picked_up",
         "returned",
         "late",
         "cancelled",
       ],
       default: "pending",
+    },
+    // Pickup & Return Flow Fields
+    pickupAddress: {
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zipCode: { type: String },
+      country: { type: String, default: "India" },
+      coordinates: {
+        latitude: { type: Number },
+        longitude: { type: Number },
+      },
+    },
+    dropAddress: {
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zipCode: { type: String },
+      country: { type: String, default: "India" },
+      coordinates: {
+        latitude: { type: Number },
+        longitude: { type: Number },
+      },
+    },
+    pickupDocument: {
+      documentId: { type: String },
+      generatedAt: { type: Date },
+      documentUrl: { type: String },
+    },
+    returnDocument: {
+      documentId: { type: String },
+      generatedAt: { type: Date },
+      documentUrl: { type: String },
+    },
+    penalties: {
+      damagePenalty: {
+        amount: { type: Number, default: 0 },
+        reason: { type: String },
+        appliedAt: { type: Date },
+      },
+      latePenalty: {
+        amount: { type: Number, default: 0 },
+        daysLate: { type: Number, default: 0 },
+        appliedAt: { type: Date },
+      },
+      totalPenalty: { type: Number, default: 0 },
+    },
+    pickupDetails: {
+      pickedUpAt: { type: Date },
+      pickedUpBy: { type: String },
+      notes: { type: String },
+    },
+    returnDetails: {
+      returnedAt: { type: Date },
+      returnedBy: { type: String },
+      condition: {
+        type: String,
+        enum: ["excellent", "good", "fair", "damaged"],
+        default: "good",
+      },
+      notes: { type: String },
     },
     pricingSnapshot: pricingSnapshotSchema,
     paymentStatus: {
