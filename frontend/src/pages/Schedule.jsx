@@ -39,8 +39,33 @@ function Schedule() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await bookingAPI.getBookings();
-      setBookings(response.bookings || []);
+      // Use the schedule endpoint for calendar view
+      const params = new URLSearchParams();
+      if (viewMode === "day") {
+        params.append("view", "day");
+        params.append("date", selectedDate);
+      } else if (viewMode === "week") {
+        params.append("view", "week");
+        // Calculate week start and end dates
+        const date = new Date(selectedDate);
+        const startOfWeek = new Date(date);
+        startOfWeek.setDate(date.getDate() - date.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        params.append("startDate", startOfWeek.toISOString().split("T")[0]);
+        params.append("endDate", endOfWeek.toISOString().split("T")[0]);
+      } else if (viewMode === "month") {
+        params.append("view", "month");
+        // Calculate month start and end dates
+        const date = new Date(selectedDate);
+        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+        const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        params.append("startDate", startOfMonth.toISOString().split("T")[0]);
+        params.append("endDate", endOfMonth.toISOString().split("T")[0]);
+      }
+
+      const response = await bookingAPI.getScheduleBookings(params);
+      setBookings(response.data || []);
     } catch (error) {
       toast.error("Failed to fetch bookings");
       console.error("Error fetching bookings:", error);
@@ -68,7 +93,9 @@ function Schedule() {
 
       const payload = {
         productId: newBooking.productId,
-        startDate: `${newBooking.pickupDate}T${newBooking.pickupTime || "00:00"}`,
+        startDate: `${newBooking.pickupDate}T${
+          newBooking.pickupTime || "00:00"
+        }`,
         endDate: `${newBooking.returnDate}T${newBooking.returnTime || "00:00"}`,
         unitCount: 1,
         pickupAddress: newBooking.pickupLocation,
@@ -171,7 +198,10 @@ function Schedule() {
                   type="text"
                   value={newBooking.customerName}
                   onChange={(e) =>
-                    setNewBooking({ ...newBooking, customerName: e.target.value })
+                    setNewBooking({
+                      ...newBooking,
+                      customerName: e.target.value,
+                    })
                   }
                   className="input w-full"
                   placeholder="Enter customer name"
@@ -185,7 +215,10 @@ function Schedule() {
                   type="email"
                   value={newBooking.customerEmail}
                   onChange={(e) =>
-                    setNewBooking({ ...newBooking, customerEmail: e.target.value })
+                    setNewBooking({
+                      ...newBooking,
+                      customerEmail: e.target.value,
+                    })
                   }
                   className="input w-full"
                   placeholder="Enter customer email"
@@ -276,7 +309,10 @@ function Schedule() {
                   type="text"
                   value={newBooking.pickupLocation}
                   onChange={(e) =>
-                    setNewBooking({ ...newBooking, pickupLocation: e.target.value })
+                    setNewBooking({
+                      ...newBooking,
+                      pickupLocation: e.target.value,
+                    })
                   }
                   className="input w-full"
                   placeholder="Enter pickup location"
@@ -290,7 +326,10 @@ function Schedule() {
                   type="text"
                   value={newBooking.returnLocation}
                   onChange={(e) =>
-                    setNewBooking({ ...newBooking, returnLocation: e.target.value })
+                    setNewBooking({
+                      ...newBooking,
+                      returnLocation: e.target.value,
+                    })
                   }
                   className="input w-full"
                   placeholder="Enter return location"

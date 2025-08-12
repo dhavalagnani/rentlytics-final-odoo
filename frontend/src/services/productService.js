@@ -108,7 +108,7 @@ class ProductService {
   // Update product (admin only)
   async updateProduct(id, productData) {
     try {
-      const response = await api.put(`/products/${id}`, productData);
+      const response = await api.patch(`/products/${id}`, productData);
       return response.data;
     } catch (error) {
       console.error("Error updating product:", error);

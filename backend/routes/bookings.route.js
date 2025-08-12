@@ -11,6 +11,9 @@ import {
   confirmPickup,
   confirmReturn,
   getBookingStats,
+  getScheduleBookings,
+  getProductAvailability,
+  getBookingConflicts,
 } from "../controllers/booking.controller.js";
 import { authenticateUser } from "../middleware/auth.js";
 
@@ -32,5 +35,10 @@ router.patch("/cancel", authenticateUser, cancelBooking);
 // Pickup & Return Flow routes
 router.post("/:id/pickup/confirm", authenticateUser, confirmPickup);
 router.post("/:id/return/confirm", authenticateUser, confirmReturn);
+
+// Schedule routes (integrated with bookings)
+router.get("/schedule", authenticateUser, getScheduleBookings);
+router.get("/availability", authenticateUser, getProductAvailability);
+router.get("/conflicts", authenticateUser, getBookingConflicts);
 
 export default router;

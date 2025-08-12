@@ -152,6 +152,70 @@ export const bookingAPI = {
       throw error;
     }
   },
+
+  // Get schedule bookings for calendar view
+  getScheduleBookings: async (params) => {
+    try {
+      const response = await api.get(`/bookings/schedule?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching schedule bookings:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
+
+  // Get product availability
+  getProductAvailability: async (productId, startDate, endDate) => {
+    try {
+      const params = new URLSearchParams({
+        productId,
+        startDate,
+        endDate,
+      });
+      const response = await api.get(
+        `/bookings/availability?${params.toString()}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching product availability:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
+
+  // Get booking conflicts
+  getBookingConflicts: async (
+    productId,
+    startDate,
+    endDate,
+    excludeBookingId
+  ) => {
+    try {
+      const params = new URLSearchParams({
+        productId,
+        startDate,
+        endDate,
+      });
+      if (excludeBookingId) {
+        params.append("excludeBookingId", excludeBookingId);
+      }
+      const response = await api.get(
+        `/bookings/conflicts?${params.toString()}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error fetching booking conflicts:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
 };
 
 export default bookingAPI;
