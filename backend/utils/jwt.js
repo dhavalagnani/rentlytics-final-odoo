@@ -1,7 +1,22 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-super-secret-jwt-key-here-change-this-in-production";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+// Helper function to issue JWT and set as httpOnly cookie
+export const issueJwt = (res, payload) => {
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: parseInt(process.env.JWT_EXPIRES_MS) || 7*24*60*60*1000
+  });
+  
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: parseInt(process.env.JWT_EXPIRES_MS) || 7*24*60*60*1000,
+    path: '/'
+  };
+  
+  res.cookie("token", token, cookieOptions);
+  return token;
+};
 
 // Generate JWT token
 export const generateToken = (userId) => {

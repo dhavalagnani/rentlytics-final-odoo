@@ -27,32 +27,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // CORS configuration
-// Update FRONTEND_URL in .env if using remote frontend
-const corsOptions = {
-  origin:
-    process.env.NODE_ENV === "production"
-      ? ["https://yourdomain.com"]
-      : [
-          "http://localhost:5173",
-          "http://localhost:3000",
-          "http://localhost:5174",
-          "http://localhost:5172",
-          "http://127.0.0.1:5173",
-          ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
-        ],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  exposedHeaders: ["Set-Cookie"],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
-
-// Middleware
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(cookieParser());
-app.use(cors(corsOptions));
+app.use(express.json());
 
 // Add logging middleware for debugging
 app.use(requestLogger);

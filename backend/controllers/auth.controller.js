@@ -4,6 +4,7 @@ import {
   getCookieOptions,
   getClearCookieOptions,
 } from "../utils/jwt.js";
+import { responses } from "../utils/responseHelper.js";
 
 // Signup controller
 export const signup = async (req, res) => {
@@ -26,10 +27,7 @@ export const signup = async (req, res) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({
-        ok: false,
-        message: "User with this email already exists",
-      });
+      return responses.conflict(res, "User with this email already exists");
     }
 
     console.log("Creating new user...");
@@ -59,11 +57,7 @@ export const signup = async (req, res) => {
     console.log("Signup successful for user:", user.email);
     console.log("Cookie set:", token.substring(0, 20) + "...");
 
-    res.status(201).json({
-      ok: true,
-      message: "User registered successfully",
-      firstName: user.firstName,
-    });
+    responses.created(res, { firstName: user.firstName }, "User registered successfully");
   } catch (error) {
     console.error("=== SIGNUP ERROR DETAILS ===");
     console.error("Error message:", error.message);
@@ -71,11 +65,7 @@ export const signup = async (req, res) => {
     console.error("Error name:", error.name);
     console.error("================================");
 
-    res.status(500).json({
-      ok: false,
-      message: "Internal server error during signup",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    responses.internalError(res, "Internal server error during signup");
   }
 };
 
@@ -87,18 +77,12 @@ export const login = async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({
-        ok: false,
-        message: "Invalid email or password",
-      });
+      return responses.unauthorized(res, "Invalid email or password");
     }
 
     // Verify password
     if (!user.comparePassword(password)) {
-      return res.status(401).json({
-        ok: false,
-        message: "Invalid email or password",
-      });
+      return responses.unauthorized(res, "Invalid email or password");
     }
 
     // Generate JWT token
@@ -112,17 +96,10 @@ export const login = async (req, res) => {
     console.log("Login successful for user:", user.email);
     console.log("Cookie set:", token.substring(0, 20) + "...");
 
-    res.json({
-      ok: true,
-      message: "Login successful",
-      firstName: user.firstName,
-    });
+    responses.ok(res, { firstName: user.firstName }, "Login successful");
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({
-      ok: false,
-      message: "Internal server error during login",
-    });
+    responses.internalError(res, "Internal server error during login");
   }
 };
 
@@ -131,16 +108,10 @@ export const getCurrentUser = async (req, res) => {
   try {
     const user = req.user;
 
-    res.json({
-      ok: true,
-      user: user.toPublicJSON(),
-    });
+    responses.ok(res, { user: user.toPublicJSON() });
   } catch (error) {
     console.error("Get current user error:", error);
-    res.status(500).json({
-      ok: false,
-      message: "Internal server error",
-    });
+    responses.internalError(res, "Internal server error");
   }
 };
 
@@ -150,15 +121,9 @@ export const logout = async (req, res) => {
     // Clear cookie
     res.cookie("token", "", getClearCookieOptions());
 
-    res.json({
-      ok: true,
-      message: "Logged out successfully",
-    });
+    responses.ok(res, null, "Logged out successfully");
   } catch (error) {
     console.error("Logout error:", error);
-    res.status(500).json({
-      ok: false,
-      message: "Internal server error during logout",
-    });
+    responses.internalError(res, "Internal server error during logout");
   }
 };
