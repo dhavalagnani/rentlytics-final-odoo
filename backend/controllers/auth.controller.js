@@ -45,16 +45,10 @@ export const signup = async (req, res) => {
     await user.save();
     console.log("User saved successfully:", user._id);
 
-    // Generate JWT token
-    const token = generateToken(user._id);
-
-    // Set cookie
-    const cookieOptions = getCookieOptions();
-    console.log("Setting cookie with options:", cookieOptions);
-    res.cookie("token", token, cookieOptions);
+    // Generate JWT token and set cookie
+    issueJwt(res, { sub: user._id, email: user.email });
 
     console.log("Signup successful for user:", user.email);
-    console.log("Cookie set:", token.substring(0, 20) + "...");
 
     responses.created(res, { firstName: user.firstName }, "User registered successfully");
   } catch (error) {
