@@ -97,15 +97,8 @@ class ProductService {
   // Create new product (admin only)
   async createProduct(productData) {
     try {
-<<<<<<< HEAD
-      // Temporarily return success until backend route is created
-      return { ok: true };
-      // const response = await api.post('/products', productData);
-      // return response.data;
-=======
       const response = await api.post("/products", productData);
       return response.data;
->>>>>>> booking
     } catch (error) {
       console.error("Error creating product:", error);
       throw error;
@@ -115,15 +108,8 @@ class ProductService {
   // Update product (admin only)
   async updateProduct(id, productData) {
     try {
-<<<<<<< HEAD
-      // Temporarily return success until backend route is created
-      return { ok: true };
-      // const response = await api.put(`/products/${id}`, productData);
-      // return response.data;
-=======
       const response = await api.patch(`/products/${id}`, productData);
       return response.data;
->>>>>>> booking
     } catch (error) {
       console.error("Error updating product:", error);
       throw error;
@@ -133,15 +119,8 @@ class ProductService {
   // Delete product (admin only)
   async deleteProduct(id) {
     try {
-<<<<<<< HEAD
-      // Temporarily return success until backend route is created
-      return { ok: true };
-      // const response = await api.delete(`/products/${id}`);
-      // return response.data;
-=======
       const response = await api.delete(`/products/${id}`);
       return response.data;
->>>>>>> booking
     } catch (error) {
       console.error("Error deleting product:", error);
       throw error;

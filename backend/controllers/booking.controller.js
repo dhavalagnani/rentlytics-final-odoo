@@ -1,3 +1,4 @@
+// services/bookingService.js
 import Booking from "../models/Booking.model.js";
 import Product from "../models/Product.model.js";
 import Pricelist from "../models/Pricelist.model.js";
