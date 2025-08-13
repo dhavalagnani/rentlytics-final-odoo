@@ -18,9 +18,9 @@ export const issueJwt = (res, payload) => {
   return token;
 };
 
-// Generate JWT token
+// Generate JWT token (legacy function - use issueJwt instead)
 export const generateToken = (userId) => {
-  if (!JWT_SECRET) {
+  if (!process.env.JWT_SECRET) {
     console.error('JWT_SECRET is not configured in environment variables');
     throw new Error('JWT_SECRET is not configured');
   }
@@ -31,9 +31,9 @@ export const generateToken = (userId) => {
   
   try {
     const token = jwt.sign(
-      { userId },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { sub: userId },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
     
     console.log(`Token generated for user: ${userId}`);
@@ -44,9 +44,9 @@ export const generateToken = (userId) => {
   }
 };
 
-// Verify JWT token
+// Verify JWT token (legacy function - use jwt.verify directly)
 export const verifyToken = (token) => {
-  if (!JWT_SECRET) {
+  if (!process.env.JWT_SECRET) {
     console.error('JWT_SECRET is not configured in environment variables');
     throw new Error('JWT_SECRET is not configured');
   }
@@ -56,8 +56,8 @@ export const verifyToken = (token) => {
   }
   
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    console.log(`Token verified for user: ${decoded.userId}`);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log(`Token verified for user: ${decoded.sub || decoded.userId}`);
     return decoded;
   } catch (error) {
     console.error('Token verification failed:', error.message);
