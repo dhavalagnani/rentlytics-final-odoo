@@ -1,75 +1,58 @@
-import { verifyToken } from "../utils/jwt.js";
+import jwt from "jsonwebtoken";
 import User from "../models/User.model.js";
+import { responses } from "../utils/responseHelper.js";
 
 // Middleware to authenticate user
 export const authenticateUser = async (req, res, next) => {
   try {
-    console.log("=== AUTH MIDDLEWARE DEBUG ===");
-    console.log("Request URL:", req.url);
-    console.log("Request method:", req.method);
-    console.log("Request headers:", req.headers);
-    console.log("Cookies:", req.cookies);
-    console.log("Cookie header:", req.headers.cookie);
+    // Check for token in Authorization header first, then cookies
+    let token = req.headers.authorization?.replace('Bearer ', '');
     
-    const token = req.cookies.token;
+    if (!token) {
+      token = req.cookies.token;
+    }
 
     if (!token) {
-      console.log("❌ No token found in cookies");
-      return res.status(401).json({
-        ok: false,
-        message: "Access denied. No token provided.",
-      });
+      return responses.unauthorized(res, "Access denied. No token provided.");
     }
-
-    console.log("✅ Token found, verifying...");
-    console.log("Token (first 20 chars):", token.substring(0, 20) + "...");
 
     // Verify token
-    const decoded = verifyToken(token);
-    console.log("✅ Token verified, decoded:", decoded);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Get user from database
-    const user = await User.findById(decoded.userId).select("-passwordHash");
-    console.log("User found:", user ? user._id : "Not found");
+    const user = await User.findById(decoded.sub || decoded.userId).select("-passwordHash");
 
     if (!user) {
-      console.log("❌ User not found in database");
-      return res.status(401).json({
-        ok: false,
-        message: "Invalid token. User not found.",
-      });
+      return responses.unauthorized(res, "Invalid token. User not found.");
     }
 
-    console.log("✅ User authenticated successfully:", user.email);
     req.user = user;
     next();
   } catch (error) {
-    console.error("❌ Auth middleware error:", error);
-    return res.status(401).json({
-      ok: false,
-      message: error.message || "Invalid token.",
-    });
+    return responses.unauthorized(res, "Invalid or expired token.");
   }
 };
 
 // Optional authentication middleware (doesn't fail if no token)
 export const optionalAuth = async (req, res, next) => {
   try {
-    const token = req.cookies.token;
+    let token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      token = req.cookies.token;
+    }
 
     if (token) {
-      const decoded = verifyToken(token);
-      const user = await User.findById(decoded.userId).select("-passwordHash");
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.sub || decoded.userId).select("-passwordHash");
 
       if (user) {
         req.user = user;
-        console.log("Optional auth: User found:", user.email);
       }
     }
 
     next();
   } catch (error) {
-    console.log("Optional auth: Token verification failed, continuing without auth");
     next();
   }
 };

@@ -8,28 +8,17 @@ import { responses } from "../utils/responseHelper.js";
 // Signup controller
 export const signup = async (req, res) => {
   try {
-    console.log("=== SIGNUP REQUEST DEBUG ===");
-    console.log("Request body:", JSON.stringify(req.body, null, 2));
-    console.log("Content-Type:", req.get("Content-Type"));
-    console.log("================================");
-
-    const { firstName, lastName, email, phone, password, aadharNumber } =
-      req.body;
+    const { firstName, lastName, email, phone, password, aadharNumber } = req.body;
 
     // Clean phone and aadhar number (remove non-digit characters)
     const cleanPhone = phone.replace(/\D/g, "");
     const cleanAadharNumber = aadharNumber.replace(/\D/g, "");
-
-    console.log("Cleaned phone:", cleanPhone);
-    console.log("Cleaned aadhar:", cleanAadharNumber);
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return responses.conflict(res, "User with this email already exists");
     }
-
-    console.log("Creating new user...");
 
     // Create new user (active by default)
     const user = new User({
@@ -43,21 +32,12 @@ export const signup = async (req, res) => {
     });
 
     await user.save();
-    console.log("User saved successfully:", user._id);
 
     // Generate JWT token and set cookie
     issueJwt(res, { sub: user._id, email: user.email });
 
-    console.log("Signup successful for user:", user.email);
-
     responses.created(res, { firstName: user.firstName }, "User registered successfully");
   } catch (error) {
-    console.error("=== SIGNUP ERROR DETAILS ===");
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-    console.error("Error name:", error.name);
-    console.error("================================");
-
     responses.internalError(res, "Internal server error during signup");
   }
 };
@@ -78,20 +58,11 @@ export const login = async (req, res) => {
       return responses.unauthorized(res, "Invalid email or password");
     }
 
-    // Generate JWT token
-    const token = generateToken(user._id);
-
-    // Set cookie
-    const cookieOptions = getCookieOptions();
-    console.log("Setting cookie with options:", cookieOptions);
-    res.cookie("token", token, cookieOptions);
-
-    console.log("Login successful for user:", user.email);
-    console.log("Cookie set:", token.substring(0, 20) + "...");
+    // Generate JWT token and set cookie
+    issueJwt(res, { sub: user._id, email: user.email });
 
     responses.ok(res, { firstName: user.firstName }, "Login successful");
   } catch (error) {
-    console.error("Login error:", error);
     responses.internalError(res, "Internal server error during login");
   }
 };
@@ -103,7 +74,6 @@ export const getCurrentUser = async (req, res) => {
 
     responses.ok(res, { user: user.toPublicJSON() });
   } catch (error) {
-    console.error("Get current user error:", error);
     responses.internalError(res, "Internal server error");
   }
 };
@@ -116,7 +86,6 @@ export const logout = async (req, res) => {
 
     responses.ok(res, null, "Logged out successfully");
   } catch (error) {
-    console.error("Logout error:", error);
     responses.internalError(res, "Internal server error during logout");
   }
 };

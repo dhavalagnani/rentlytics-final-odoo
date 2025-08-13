@@ -5,6 +5,8 @@ import {
   getCurrentUser,
   logout,
 } from "../controllers/auth.controller.js";
+import { issueJwt } from "../utils/jwt.js";
+import { responses } from "../utils/responseHelper.js";
 import {
   validateSignup,
   validateLogin,
@@ -26,6 +28,17 @@ router.post("/login", loginRateLimiter, validateLogin, login);
 
 // Get current user route (protected)
 router.get("/me", authenticateUser, getCurrentUser);
+
+// Refresh token route
+router.post("/refresh", authenticateUser, (req, res) => {
+  try {
+    // Re-issue JWT token
+    issueJwt(res, { sub: req.user._id, email: req.user.email });
+    responses.ok(res, { user: req.user.toPublicJSON() });
+  } catch (error) {
+    responses.internalError(res, "Failed to refresh token");
+  }
+});
 
 // Logout route
 router.post("/logout", logout);
