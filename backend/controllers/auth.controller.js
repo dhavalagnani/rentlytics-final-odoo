@@ -1,7 +1,6 @@
 import User from "../models/User.model.js";
 import {
-  generateToken,
-  getCookieOptions,
+  issueJwt,
   getClearCookieOptions,
 } from "../utils/jwt.js";
 import { responses } from "../utils/responseHelper.js";

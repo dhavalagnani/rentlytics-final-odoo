@@ -78,8 +78,8 @@ export const getCookieOptions = () => {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: isProduction ? 'none' : 'lax',
+    maxAge: parseInt(process.env.JWT_EXPIRES_MS) || 7 * 24 * 60 * 60 * 1000, // 7 days
     path: '/',
     domain: isProduction ? undefined : undefined // Let browser set domain in development
   };
@@ -92,7 +92,7 @@ export const getClearCookieOptions = () => {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
+    sameSite: isProduction ? 'none' : 'lax',
     expires: new Date(0),
     path: '/',
     domain: isProduction ? undefined : undefined // Let browser set domain in development
